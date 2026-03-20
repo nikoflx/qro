@@ -2,17 +2,34 @@ export default async function handler(req, res) {
   const { prompt, seed } = req.query;
   if (!prompt) return res.status(400).json({ error: 'No prompt' });
 
-  // Use 'turbo' model — much faster than flux, fits within Vercel's 10s free tier limit
-  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true&seed=${seed || 0}&model=turbo`;
+  const token = process.env.HF_TOKEN;
+  if (!token) return res.status(500).json({ error: 'HF_TOKEN not set in environment variables' });
 
   try {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 9000); // 9s to stay under Vercel 10s limit
+    const timeout = setTimeout(() => controller.abort(), 25000);
 
-    const response = await fetch(url, { signal: controller.signal });
+    const response = await fetch(
+      'https://api-inference.huggingface.co/models/stabilityai/stable-diffusion-xl-base-1.0',
+      {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: prompt,
+          parameters: { width: 512, height: 512, num_inference_steps: 20, seed: parseInt(seed) || 0 }
+        }),
+        signal: controller.signal,
+      }
+    );
     clearTimeout(timeout);
 
-    if (!response.ok) return res.status(502).json({ error: 'Pollinations failed', status: response.status });
+    if (!response.ok) {
+      const err = await response.text();
+      return res.status(502).json({ error: 'HF failed', detail: err });
+    }
 
     const buffer = await response.arrayBuffer();
     res.setHeader('Content-Type', 'image/jpeg');
@@ -20,9 +37,7 @@ export default async function handler(req, res) {
     res.setHeader('Cache-Control', 'public, max-age=86400');
     res.send(Buffer.from(buffer));
   } catch (e) {
-    if (e.name === 'AbortError') {
-      return res.status(504).json({ error: 'Timeout' });
-    }
+    if (e.name === 'AbortError') return res.status(504).json({ error: 'Timeout' });
     res.status(500).json({ error: 'Proxy error', detail: e.message });
   }
 }
