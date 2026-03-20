@@ -1139,26 +1139,33 @@ function onFileUpload(inp) {
   r.readAsDataURL(f);
 }
 
-function previewAiBg() {
+async function previewAiBg() {
   const prompt=document.getElementById('ai-prompt').value.trim(); if(!prompt) return;
   const loadEl=document.getElementById('ai-loading');
   const prevEl=document.getElementById('ai-preview');
-  loadEl.style.display='block'; loadEl.textContent='Generating AI image... (10-20 seconds)';
+  loadEl.style.display='block';
+  loadEl.innerHTML='Generating AI image... <span style="color:var(--text3)">(20-40s, Pollinations free tier)</span>';
   prevEl.style.display='none'; aiImageEl=null;
   const seed=Math.random()*9999|0;
-  // Use our own proxy to avoid CORS issues
-  const url=`/api/proxy?prompt=${encodeURIComponent(prompt+', vivid detailed photorealistic, high quality')}&seed=${seed}`;
-  const img=new Image();
-  img.onload=()=>{
-    aiImageEl=img;
-    document.getElementById('ai-preview-img').src=url;
-    prevEl.style.display='block';
-    loadEl.style.display='none';
-  };
-  img.onerror=()=>{
-    loadEl.textContent='Could not generate image. Pollinations may be down — try again in a moment.';
-  };
-  img.src=url;
+  const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt+', vivid photorealistic')}?width=512&height=512&nologo=true&seed=${seed}&model=turbo`;
+  try {
+    // Fetch as blob — this works cross-origin for images and lets us draw to canvas
+    const resp = await fetch(url, { mode: 'cors' });
+    if (!resp.ok) throw new Error('status '+resp.status);
+    const blob = await resp.blob();
+    const objectUrl = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      aiImageEl = img;
+      document.getElementById('ai-preview-img').src = objectUrl;
+      prevEl.style.display='block';
+      loadEl.style.display='none';
+    };
+    img.onerror = () => { loadEl.innerHTML='Failed to load image. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button>'; };
+    img.src = objectUrl;
+  } catch(e) {
+    loadEl.innerHTML='Could not generate. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button> <span style="color:var(--text3);font-size:10px;">('+e.message+')</span>';
+  }
 }
 
 // ─────────────────────────────────────────────
