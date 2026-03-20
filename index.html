@@ -1299,29 +1299,21 @@ async function previewAiBg() {
   loadEl.innerHTML='Generating AI image... <span style="color:var(--text3)">(20-40s)</span>';
   prevEl.style.display='none'; aiImageEl=null;
   const seed=Math.random()*9999|0;
-  const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt+', vivid photorealistic')}?width=512&height=512&nologo=true&seed=${seed}&model=flux-schnell&referrer=qroapp.vercel.app&nofeed=true`;
+  const url=`/api/proxy?prompt=${encodeURIComponent(prompt+', vivid photorealistic, high quality')}&seed=${seed}`;
   const img=new Image();
-  // MUST set crossOrigin before src — this is the correct order for canvas use
-  img.crossOrigin='anonymous';
+  const timer=setTimeout(()=>{
+    loadEl.innerHTML='Taking too long. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button>';
+  },45000);
   img.onload=()=>{
+    clearTimeout(timer);
     aiImageEl=img;
-    document.getElementById('ai-preview-img').src=img.src;
+    document.getElementById('ai-preview-img').src=url;
     prevEl.style.display='block';
     loadEl.style.display='none';
   };
   img.onerror=()=>{
-    // Fallback: try without crossOrigin for preview only
-    const fallback=new Image();
-    fallback.onload=()=>{
-      aiImageEl=null; // can't use on canvas but at least shows preview
-      document.getElementById('ai-preview-img').src=url;
-      prevEl.style.display='block';
-      loadEl.innerHTML='<span style="color:var(--text3);font-size:11px;">Preview only — background may not apply. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:11px;text-decoration:underline;">Try again ↺</button></span>';
-    };
-    fallback.onerror=()=>{
-      loadEl.innerHTML='Could not generate. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button>';
-    };
-    fallback.src=url;
+    clearTimeout(timer);
+    loadEl.innerHTML='Could not generate. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button>';
   };
   img.src=url;
 }
