@@ -1477,6 +1477,10 @@ renderSceneGrid();
 syncCustomizePanelToStyle(curStyle);
 // Show logo customization by default
 document.getElementById('logo-cust-section').style.display = 'block';
+// Silently warm up the AI model in the background when page loads
+setTimeout(() => {
+  fetch('/api/proxy?prompt=background&seed=1').catch(()=>{});
+}, 2000);
 </script>
 
 <!-- Privacy Policy Modal -->
