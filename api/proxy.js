@@ -1,11 +1,13 @@
 export default async function handler(req, res) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  if (req.method === 'OPTIONS') return res.status(200).end();
   const { prompt, seed } = req.query;
   if (!prompt) return res.status(400).json({ error: 'No prompt' });
 
   const token = process.env.POLLINATIONS_TOKEN || '';
   const authHeader = token ? { 'Authorization': `Bearer ${token}` } : {};
 
-  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true&seed=${seed || 0}&model=flux-schnell&nofeed=true&referrer=qroapp.vercel.app`;
+  const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=512&height=512&nologo=true&seed=${seed || 0}&model=flux&nofeed=true&referrer=qroapp.vercel.app`;
 
   try {
     const controller = new AbortController();
