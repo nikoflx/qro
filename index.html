@@ -473,19 +473,97 @@
           <div id="logo-cust-section" style="display:none;">
             <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
             <span class="slabel">Logo</span>
+
+            <!-- Logo source tabs -->
+            <div style="display:flex;gap:4px;margin-bottom:12px;">
+              <button class="bg-tab active" id="logo-src-brand" onclick="setLogoSrc('brand',this)">Brand</button>
+              <button class="bg-tab" id="logo-src-custom" onclick="setLogoSrc('custom',this)">Upload custom</button>
+              <button class="bg-tab" id="logo-src-text" onclick="setLogoSrc('text',this)">Text / emoji</button>
+            </div>
+
+            <!-- Custom upload -->
+            <div id="logo-upload-area" style="display:none;margin-bottom:12px;">
+              <div class="upload-area" onclick="document.getElementById('logo-file').click()" id="logo-upload-label">
+                Click to upload your logo (PNG, SVG, JPG)
+              </div>
+              <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="onLogoUpload(this)">
+            </div>
+
+            <!-- Text/emoji logo -->
+            <div id="logo-text-area" style="display:none;margin-bottom:12px;">
+              <input type="text" id="logo-text-input" placeholder="Type text or emoji e.g. 🍕 or QR"
+                style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:16px;font-family:inherit;outline:none;"
+                oninput="updateTextLogoPreview()">
+            </div>
+
+            <!-- Logo color controls -->
             <div style="display:flex;flex-direction:column;gap:10px;">
+
+              <!-- Background color + shape -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div>
+                  <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Background color</div>
+                  <div style="display:flex;gap:5px;align-items:center;">
+                    <input type="color" id="logo-bg-color" value="#ffffff"
+                      oninput="document.getElementById('logo-bg-color-hex').value=this.value"
+                      style="width:36px;height:28px;border-radius:6px;border:1px solid var(--border2);background:none;cursor:pointer;padding:2px;flex-shrink:0;">
+                    <input type="text" id="logo-bg-color-hex" value="#ffffff"
+                      oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('logo-bg-color').value=this.value"
+                      style="flex:1;padding:4px 7px;font-size:11px;font-family:monospace;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);">
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Icon / text color</div>
+                  <div style="display:flex;gap:5px;align-items:center;">
+                    <input type="color" id="logo-fg-color" value="#000000"
+                      oninput="document.getElementById('logo-fg-color-hex').value=this.value"
+                      style="width:36px;height:28px;border-radius:6px;border:1px solid var(--border2);background:none;cursor:pointer;padding:2px;flex-shrink:0;">
+                    <input type="text" id="logo-fg-color-hex" value="#000000"
+                      oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('logo-fg-color').value=this.value"
+                      style="flex:1;padding:4px 7px;font-size:11px;font-family:monospace;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Background shape -->
               <div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:11px;color:var(--text3);">Size</span><span id="logo-size-val" style="font-size:11px;color:var(--text2);">Medium</span></div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Background shape</div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                  <button class="blend-btn on" onclick="setLogoBgShape('circle',this)">● Circle</button>
+                  <button class="blend-btn" onclick="setLogoBgShape('rounded',this)">▣ Rounded</button>
+                  <button class="blend-btn" onclick="setLogoBgShape('square',this)">■ Square</button>
+                  <button class="blend-btn" onclick="setLogoBgShape('none',this)">✕ None</button>
+                </div>
+              </div>
+
+              <!-- Size -->
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:11px;color:var(--text3);">Size</span>
+                  <span id="logo-size-val" style="font-size:11px;color:var(--text2);">Medium</span>
+                </div>
                 <input type="range" id="logo-size" min="4" max="14" value="9" step="1" oninput="updateLogoLabel()" style="width:100%;">
               </div>
+
+              <!-- Opacity -->
               <div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:11px;color:var(--text3);">Icon opacity</span><span id="logo-opacity-val" style="font-size:11px;color:var(--text2);">90%</span></div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:11px;color:var(--text3);">Opacity</span>
+                  <span id="logo-opacity-val" style="font-size:11px;color:var(--text2);">90%</span>
+                </div>
                 <input type="range" id="logo-opacity" min="10" max="100" value="90" step="5" oninput="updateLogoLabel()" style="width:100%;">
               </div>
+
+              <!-- Background opacity -->
               <div>
-                <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:11px;color:var(--text3);">Background</span><span id="logo-bg-val" style="font-size:11px;color:var(--text2);">Transparent</span></div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:11px;color:var(--text3);">Background opacity</span>
+                  <span id="logo-bg-val" style="font-size:11px;color:var(--text2);">Transparent</span>
+                </div>
                 <input type="range" id="logo-bg-opacity" min="0" max="100" value="0" step="5" oninput="updateLogoLabel()" style="width:100%;">
               </div>
+
+              <!-- Position -->
               <div>
                 <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Position</div>
                 <div style="display:flex;align-items:center;gap:12px;">
@@ -503,6 +581,8 @@
                   <div style="font-size:11px;color:var(--text3);line-height:1.6;">Pick where<br>the logo sits</div>
                 </div>
               </div>
+
+              <!-- Blend mode -->
               <div>
                 <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Blend mode</div>
                 <div style="display:flex;gap:5px;flex-wrap:wrap;">
@@ -513,6 +593,7 @@
                   <button class="blend-btn" data-blend="color-dodge" onclick="setBlend('color-dodge',this)">Dodge</button>
                 </div>
               </div>
+
             </div>
           </div>
 
@@ -788,8 +869,11 @@ let aiImageEl = null;
 let gradDir   = 'diagonal';
 let modShape  = 'square';
 let logoBlend = 'normal';
-let logoPos   = 'center'; // center, tl, tr, bl, br
-let customColors = null; // null = use style defaults
+let logoPos   = 'center';
+let customColors = null;
+let logoSrc   = 'brand';   // 'brand' | 'custom' | 'text'
+let customLogoImg = null;  // uploaded logo HTMLImageElement
+let logoBgShape = 'circle'; // 'circle' | 'rounded' | 'square' | 'none'
 
 // ─────────────────────────────────────────────
 // Helpers
@@ -805,46 +889,113 @@ function getColors() {
 // ─────────────────────────────────────────────
 // Logo drawing — fully transparent/customizable
 // ─────────────────────────────────────────────
+function setLogoSrc(src, el) {
+  logoSrc = src;
+  document.querySelectorAll('#logo-src-brand,#logo-src-custom,#logo-src-text').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('logo-upload-area').style.display = src==='custom'?'block':'none';
+  document.getElementById('logo-text-area').style.display   = src==='text'?'block':'none';
+  // Always show logo customization if not brand mode
+  if (src !== 'brand') {
+    curBrand = null;
+    renderBrands();
+    document.getElementById('logo-cust-section').style.display = 'block';
+  }
+}
+
+function onLogoUpload(inp) {
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{customLogoImg=img; document.getElementById('logo-upload-label').textContent='✓ '+f.name;};
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(f);
+}
+
+function updateTextLogoPreview() { /* live update handled at generate time */ }
+
+function setLogoBgShape(shape, el) {
+  logoBgShape = shape;
+  document.querySelectorAll('.blend-btn[onclick^="setLogoBgShape"]').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+}
+
 function drawLogoOnCanvas(ctx, brand, cx, cy, r, opts = {}) {
-  const d = BRAND_SVGS[brand];
-  if (!d) return;
   const opacity   = (opts.opacity   ?? 100) / 100;
   const bgOpacity = (opts.bgOpacity ?? 0)   / 100;
   const blend     = opts.blend || 'normal';
+  const bgColor   = document.getElementById('logo-bg-color')?.value  || '#ffffff';
+  const fgColor   = document.getElementById('logo-fg-color')?.value  || '#000000';
+  const bgShp     = logoBgShape;
 
   ctx.save();
   ctx.globalCompositeOperation = blend;
 
-  // Optional background circle
-  if (bgOpacity > 0) {
+  // ── Background shape ──
+  if (bgOpacity > 0 && bgShp !== 'none') {
     ctx.globalAlpha = bgOpacity;
-    if (d.bg === 'linear') {
-      const grd = ctx.createLinearGradient(cx-r, cy+r, cx+r, cy-r);
-      d.gradColors.forEach((c, i) => grd.addColorStop(i/(d.gradColors.length-1), c));
-      ctx.fillStyle = grd;
+    ctx.fillStyle = bgColor;
+    ctx.beginPath();
+    if (bgShp === 'circle') {
+      ctx.arc(cx, cy, r * 1.18, 0, Math.PI*2);
+    } else if (bgShp === 'rounded') {
+      const s=r*1.18*2, x=cx-r*1.18, y=cy-r*1.18, rr=s*.22;
+      ctx.moveTo(x+rr,y); ctx.lineTo(x+s-rr,y);
+      ctx.quadraticCurveTo(x+s,y,x+s,y+rr); ctx.lineTo(x+s,y+s-rr);
+      ctx.quadraticCurveTo(x+s,y+s,x+s-rr,y+s); ctx.lineTo(x+rr,y+s);
+      ctx.quadraticCurveTo(x,y+s,x,y+s-rr); ctx.lineTo(x,y+rr);
+      ctx.quadraticCurveTo(x,y,x+rr,y);
     } else {
-      ctx.fillStyle = d.bg;
+      const s=r*1.18*2, x=cx-r*1.18, y=cy-r*1.18;
+      ctx.rect(x,y,s,s);
     }
-    ctx.beginPath(); ctx.arc(cx, cy, r * 1.15, 0, Math.PI*2); ctx.fill();
+    ctx.closePath(); ctx.fill();
   }
 
-  // Draw icon — always fully on top
   ctx.globalAlpha = opacity;
   ctx.globalCompositeOperation = 'source-over';
 
-  if (d.bg === 'linear') {
-    const grd2 = ctx.createLinearGradient(cx-r, cy+r, cx+r, cy-r);
-    d.gradColors.forEach((c, i) => grd2.addColorStop(i/(d.gradColors.length-1), c));
-    ctx.fillStyle = grd2;
-  } else {
-    ctx.fillStyle = d.bg;
+  // ── Draw the logo ──
+  if (logoSrc === 'custom' && customLogoImg) {
+    // Custom uploaded image
+    const s = r * 1.8;
+    ctx.drawImage(customLogoImg, cx-s/2, cy-s/2, s, s);
+
+  } else if (logoSrc === 'text') {
+    // Text / emoji
+    const txt = (document.getElementById('logo-text-input')?.value || '?').trim().slice(0,4);
+    ctx.fillStyle = fgColor;
+    ctx.font = `bold ${Math.round(r*1.1)}px -apple-system,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(txt, cx, cy);
+
+  } else if (brand) {
+    // Brand SVG path with custom fg color override
+    const d = BRAND_SVGS[brand];
+    if (!d) { ctx.restore(); return; }
+    // Background circle with brand color (or custom)
+    const useBrandBg = (bgOpacity === 0); // if no bg set, draw brand color circle
+    if (useBrandBg) {
+      if (d.bg === 'linear') {
+        const grd = ctx.createLinearGradient(cx-r,cy+r,cx+r,cy-r);
+        d.gradColors.forEach((c,i)=>grd.addColorStop(i/(d.gradColors.length-1),c));
+        ctx.fillStyle = grd;
+      } else { ctx.fillStyle = d.bg; }
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    }
+    // Draw SVG icon — use fgColor if user changed it from default white, else brand fg
+    const iconColor = fgColor !== '#000000' ? fgColor : d.fg;
+    ctx.fillStyle = iconColor;
+    ctx.save();
+    const scale = (r * 1.55) / 24;
+    ctx.translate(cx - 12*scale, cy - 12*scale);
+    ctx.scale(scale, scale);
+    ctx.fill(new Path2D(d.path));
+    ctx.restore();
   }
-  ctx.save();
-  const scale = (r * 1.6) / 24;
-  ctx.translate(cx - 12*scale, cy - 12*scale);
-  ctx.scale(scale, scale);
-  ctx.fill(new Path2D(d.path));
-  ctx.restore();
 
   ctx.restore();
 }
@@ -955,7 +1106,8 @@ function renderBrands() {
     btn.onclick = () => {
       curBrand = (curBrand===name)?null:name;
       if (curBrand) document.getElementById('url-input').value = BRANDS[name].url;
-      document.getElementById('logo-cust-section').style.display = curBrand?'block':'none';
+      const custSection = document.getElementById('logo-cust-section');
+      custSection.style.display = (curBrand || logoSrc!=='brand') ? 'block' : 'none';
       renderBrands(); renderStyleGrid();
     };
     row.appendChild(btn);
@@ -1144,28 +1296,34 @@ async function previewAiBg() {
   const loadEl=document.getElementById('ai-loading');
   const prevEl=document.getElementById('ai-preview');
   loadEl.style.display='block';
-  loadEl.innerHTML='Generating AI image... <span style="color:var(--text3)">(20-40s, Pollinations free tier)</span>';
+  loadEl.innerHTML='Generating AI image... <span style="color:var(--text3)">(20-40s)</span>';
   prevEl.style.display='none'; aiImageEl=null;
   const seed=Math.random()*9999|0;
-  const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt+', vivid photorealistic')}?width=512&height=512&nologo=true&seed=${seed}&model=turbo`;
-  try {
-    // Fetch as blob — this works cross-origin for images and lets us draw to canvas
-    const resp = await fetch(url, { mode: 'cors' });
-    if (!resp.ok) throw new Error('status '+resp.status);
-    const blob = await resp.blob();
-    const objectUrl = URL.createObjectURL(blob);
-    const img = new Image();
-    img.onload = () => {
-      aiImageEl = img;
-      document.getElementById('ai-preview-img').src = objectUrl;
+  const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt+', vivid photorealistic')}?width=512&height=512&nologo=true&seed=${seed}&model=flux-schnell&referrer=qroapp.vercel.app&nofeed=true`;
+  const img=new Image();
+  // MUST set crossOrigin before src — this is the correct order for canvas use
+  img.crossOrigin='anonymous';
+  img.onload=()=>{
+    aiImageEl=img;
+    document.getElementById('ai-preview-img').src=img.src;
+    prevEl.style.display='block';
+    loadEl.style.display='none';
+  };
+  img.onerror=()=>{
+    // Fallback: try without crossOrigin for preview only
+    const fallback=new Image();
+    fallback.onload=()=>{
+      aiImageEl=null; // can't use on canvas but at least shows preview
+      document.getElementById('ai-preview-img').src=url;
       prevEl.style.display='block';
-      loadEl.style.display='none';
+      loadEl.innerHTML='<span style="color:var(--text3);font-size:11px;">Preview only — background may not apply. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:11px;text-decoration:underline;">Try again ↺</button></span>';
     };
-    img.onerror = () => { loadEl.innerHTML='Failed to load image. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button>'; };
-    img.src = objectUrl;
-  } catch(e) {
-    loadEl.innerHTML='Could not generate. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button> <span style="color:var(--text3);font-size:10px;">('+e.message+')</span>';
-  }
+    fallback.onerror=()=>{
+      loadEl.innerHTML='Could not generate. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button>';
+    };
+    fallback.src=url;
+  };
+  img.src=url;
 }
 
 // ─────────────────────────────────────────────
@@ -1264,13 +1422,13 @@ async function generate() {
     }
 
     // ── 3. Logo — drawn LAST so it's always on top ──
-    if(curBrand){
+    const hasLogo = (logoSrc==='brand'&&curBrand) || (logoSrc==='custom'&&customLogoImg) || (logoSrc==='text'&&document.getElementById('logo-text-input')?.value.trim());
+    if(hasLogo){
       const sizeRatio = (+val('logo-size'))/100;
       const r = W * sizeRatio;
       const opacity   = +val('logo-opacity');
       const bgOpacity = +val('logo-bg-opacity');
       const [lx,ly]   = getLogoPosXY(W, r);
-      // Reset composite operation to normal before drawing logo
       ctx.globalCompositeOperation = 'source-over';
       ctx.globalAlpha = 1;
       drawLogoOnCanvas(ctx,curBrand,lx,ly,r,{opacity,bgOpacity,blend:logoBlend});
@@ -1325,6 +1483,8 @@ renderCats();
 renderStyleGrid();
 renderSceneGrid();
 syncCustomizePanelToStyle(curStyle);
+// Show logo customization by default
+document.getElementById('logo-cust-section').style.display = 'block';
 </script>
 
 <!-- Privacy Policy Modal -->
