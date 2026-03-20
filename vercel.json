@@ -3,5 +3,11 @@
     "api/proxy.js": {
       "maxDuration": 30
     }
-  }
+  },
+  "crons": [
+    {
+      "path": "/api/proxy?prompt=background&seed=1",
+      "schedule": "*/5 * * * *"
+    }
+  ]
 }
