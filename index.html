@@ -1141,12 +1141,23 @@ function onFileUpload(inp) {
 
 function previewAiBg() {
   const prompt=document.getElementById('ai-prompt').value.trim(); if(!prompt) return;
-  document.getElementById('ai-loading').style.display='block';
-  document.getElementById('ai-preview').style.display='none';
-  const url=`https://image.pollinations.ai/prompt/${encodeURIComponent(prompt+', vivid detailed photorealistic')}?width=512&height=512&nologo=true&seed=${Math.random()*9999|0}`;
-  const img=new Image(); img.crossOrigin='anonymous';
-  img.onload=()=>{aiImageEl=img;document.getElementById('ai-preview-img').src=url;document.getElementById('ai-preview').style.display='block';document.getElementById('ai-loading').style.display='none';};
-  img.onerror=()=>{document.getElementById('ai-loading').textContent='Could not load image. Check your internet.';};
+  const loadEl=document.getElementById('ai-loading');
+  const prevEl=document.getElementById('ai-preview');
+  loadEl.style.display='block'; loadEl.textContent='Generating AI image... (10-20 seconds)';
+  prevEl.style.display='none'; aiImageEl=null;
+  const seed=Math.random()*9999|0;
+  // Use our own proxy to avoid CORS issues
+  const url=`/api/proxy?prompt=${encodeURIComponent(prompt+', vivid detailed photorealistic, high quality')}&seed=${seed}`;
+  const img=new Image();
+  img.onload=()=>{
+    aiImageEl=img;
+    document.getElementById('ai-preview-img').src=url;
+    prevEl.style.display='block';
+    loadEl.style.display='none';
+  };
+  img.onerror=()=>{
+    loadEl.textContent='Could not generate image. Pollinations may be down — try again in a moment.';
+  };
   img.src=url;
 }
 
@@ -1192,7 +1203,8 @@ async function generate() {
     // ── 1. Background ──
     let hasBg=false;
     if (bgMode==='upload'&&bgImage)         { ctx.drawImage(bgImage,0,0,W,W); hasBg=true; }
-    else if (bgMode==='ai'&&aiImageEl)      { ctx.drawImage(aiImageEl,0,0,W,W); hasBg=true; }
+    else if (bgMode==='ai'&&aiImageEl)      { try{ctx.drawImage(aiImageEl,0,0,W,W);hasBg=true;}catch(e){console.warn('CORS blocked AI image, using style bg');ctx.fillStyle=colors.bg;ctx.fillRect(0,0,W,W);} }
+    else if (bgMode==='ai'&&!aiImageEl)     { ctx.fillStyle=colors.bg; ctx.fillRect(0,0,W,W); }
     else if (bgMode==='scene'&&SCENES[curScene]) { SCENES[curScene](canvas,W); hasBg=true; }
     else {
       ctx.fillStyle=colors.bg; ctx.fillRect(0,0,W,W);
