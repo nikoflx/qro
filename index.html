@@ -1,1 +1,1524 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Qro — AI QR Code Generator</title>
+<meta name="description" content="Free AI-powered QR code generator. Custom styles, brand logos, AI backgrounds. Open source.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --surface: #141414;
+    --surface2: #1c1c1c;
+    --border: #2a2a2a;
+    --border2: #383838;
+    --text: #f0f0f0;
+    --text2: #888;
+    --text3: #555;
+    --accent: #7c6fef;
+    --accent2: #a89cf5;
+    --green: #22c55e;
+    --radius: 10px;
+    --radius2: 14px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    min-height: 100vh;
+    line-height: 1.5;
+  }
+
+  /* ── Layout ── */
+  .page { max-width: 980px; margin: 0 auto; padding: 0 20px 80px; }
+
+  /* ── Header ── */
+  header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 22px 0 28px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 36px;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+  .logo-box {
+    width: 32px; height: 32px; background: var(--accent);
+    border-radius: 8px; display: flex; align-items: center; justify-content: center;
+  }
+  .logo-box svg { width: 18px; height: 18px; fill: white; }
+  .logo-text { font-size: 22px; font-weight: 700; letter-spacing: -0.5px; color: var(--text); }
+  .logo-text span { color: var(--accent2); }
+  .header-badges { display: flex; gap: 8px; align-items: center; }
+  .badge {
+    font-size: 11px; padding: 3px 10px; border-radius: 20px;
+    border: 1px solid var(--border2); color: var(--text2);
+  }
+  .badge.ai { background: rgba(124,111,239,.15); border-color: rgba(124,111,239,.4); color: var(--accent2); }
+
+  /* ── Hero ── */
+  .hero { text-align: center; margin-bottom: 44px; }
+  .hero h1 {
+    font-size: clamp(28px, 5vw, 42px); font-weight: 800;
+    letter-spacing: -1.5px; line-height: 1.1; margin-bottom: 12px;
+  }
+  .hero h1 span { color: var(--accent2); }
+  .hero p { font-size: 16px; color: var(--text2); max-width: 500px; margin: 0 auto; }
+
+  /* ── Main grid ── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 360px;
+    gap: 20px;
+    align-items: start;
+  }
+  @media (max-width: 760px) { .main-grid { grid-template-columns: 1fr; } }
+
+  /* ── Card ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius2);
+    padding: 22px;
+  }
+
+  /* ── Section label ── */
+  .slabel {
+    font-size: 11px; text-transform: uppercase; letter-spacing: .7px;
+    color: var(--text3); font-weight: 600; margin-bottom: 8px; display: block;
+  }
+
+  /* ── Input ── */
+  .inp {
+    width: 100%; padding: 11px 14px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: var(--radius); color: var(--text); font-size: 14px;
+    font-family: inherit; outline: none; transition: border-color .15s;
+    margin-bottom: 18px; display: block;
+  }
+  .inp:focus { border-color: var(--accent); }
+  .inp::placeholder { color: var(--text3); }
+
+  /* ── Brand pills ── */
+  .brands { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 20px; }
+  .brand-btn {
+    display: flex; align-items: center; gap: 7px;
+    padding: 6px 12px 6px 6px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: 20px; cursor: pointer; font-size: 12px;
+    color: var(--text2); font-family: inherit; transition: all .12s;
+  }
+  .brand-btn:hover { border-color: var(--border2); color: var(--text); background: #222; }
+  .brand-btn.active { background: rgba(124,111,239,.18); border-color: var(--accent); color: var(--accent2); }
+  .brand-btn img { border-radius: 50%; display: block; width: 20px; height: 20px; object-fit: cover; }
+
+  /* ── Style categories ── */
+  .cats { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 12px; }
+  .cat-btn {
+    font-size: 11px; padding: 4px 12px; border-radius: 20px;
+    border: 1px solid var(--border); color: var(--text3);
+    background: transparent; cursor: pointer; font-family: inherit; transition: all .1s;
+  }
+  .cat-btn:hover { color: var(--text2); border-color: var(--border2); }
+  .cat-btn.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+  /* ── Style grid ── */
+  .style-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 18px;
+  }
+  @media (max-width: 500px) { .style-grid { grid-template-columns: repeat(3, 1fr); } }
+  .style-card {
+    position: relative; border: 1px solid var(--border); border-radius: 10px;
+    overflow: hidden; cursor: pointer; aspect-ratio: 1; transition: border-color .12s;
+  }
+  .style-card:hover { border-color: var(--border2); }
+  .style-card.active { border: 2px solid var(--green); }
+  .style-card canvas { width: 100%; height: 100%; display: block; }
+  .style-name {
+    position: absolute; bottom: 0; left: 0; right: 0;
+    padding: 18px 6px 5px;
+    background: linear-gradient(transparent, rgba(0,0,0,.75));
+    font-size: 10px; color: #fff; text-align: center; font-weight: 500;
+    pointer-events: none;
+  }
+  .style-check {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(34,197,94,.12); opacity: 0;
+  }
+  .style-card.active .style-check { opacity: 1; }
+  .check-circle {
+    width: 24px; height: 24px; border-radius: 50%; background: var(--green);
+    display: flex; align-items: center; justify-content: center;
+  }
+
+  /* ── Background section ── */
+  .bg-tabs { display: flex; gap: 5px; margin-bottom: 12px; flex-wrap: wrap; }
+  .bg-tab {
+    font-size: 11px; padding: 5px 12px; border-radius: 20px;
+    border: 1px solid var(--border); color: var(--text3);
+    background: transparent; cursor: pointer; font-family: inherit;
+  }
+  .bg-tab:hover { color: var(--text2); }
+  .bg-tab.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+  .bg-content { font-size: 12px; color: var(--text2); }
+
+  .scene-grid { display: flex; flex-wrap: wrap; gap: 5px; margin-bottom: 10px; }
+  .scene-btn {
+    font-size: 11px; padding: 4px 10px; border-radius: 20px;
+    border: 1px solid var(--border); color: var(--text3);
+    background: transparent; cursor: pointer; font-family: inherit;
+  }
+  .scene-btn.active { background: var(--surface2); color: var(--text); border-color: var(--border2); }
+
+  .ai-prompt-row { display: flex; gap: 8px; margin-top: 8px; }
+  .ai-prompt-row input {
+    flex: 1; padding: 9px 12px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: var(--radius); color: var(--text); font-size: 13px;
+    font-family: inherit; outline: none;
+  }
+  .ai-prompt-row input:focus { border-color: var(--accent); }
+  .ai-prompt-row input::placeholder { color: var(--text3); }
+  .ai-try-btn {
+    padding: 9px 14px; background: rgba(124,111,239,.2);
+    border: 1px solid rgba(124,111,239,.4); border-radius: var(--radius);
+    color: var(--accent2); font-size: 12px; cursor: pointer; font-family: inherit;
+    white-space: nowrap; font-weight: 500; transition: background .12s;
+  }
+  .ai-try-btn:hover { background: rgba(124,111,239,.3); }
+
+  .bg-previews { display: flex; gap: 5px; margin-top: 8px; }
+  .bg-previews canvas { flex: 1; height: 55px; border-radius: 7px; border: 1px solid var(--border); }
+
+  .upload-area {
+    border: 1px dashed var(--border2); border-radius: var(--radius);
+    padding: 20px; text-align: center; cursor: pointer; font-size: 13px;
+    color: var(--text3); transition: all .12s;
+  }
+  .upload-area:hover { border-color: var(--accent); color: var(--text2); }
+
+  /* ── Generate button ── */
+  .gen-btn {
+    width: 100%; padding: 13px; margin-top: 4px;
+    background: var(--accent); border: none; border-radius: var(--radius);
+    color: white; font-size: 14px; font-weight: 700;
+    font-family: inherit; cursor: pointer; letter-spacing: .2px;
+    display: flex; align-items: center; justify-content: center; gap: 7px;
+    transition: opacity .15s; position: relative; overflow: hidden;
+  }
+  .gen-btn:hover { opacity: .88; }
+  .gen-btn:disabled { opacity: .35; cursor: not-allowed; }
+
+  /* ── Result panel ── */
+  .result-panel {
+    position: sticky; top: 20px;
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius2); overflow: hidden;
+  }
+  .result-placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    padding: 48px 20px; text-align: center; color: var(--text3);
+    min-height: 380px;
+  }
+  .placeholder-icon {
+    width: 56px; height: 56px; border: 1px solid var(--border2);
+    border-radius: 12px; display: flex; align-items: center; justify-content: center;
+    margin-bottom: 12px;
+  }
+  .result-canvas-wrap { display: none; padding: 0; }
+  #result-canvas { display: block; width: 100%; height: auto; }
+  .result-actions {
+    display: none; padding: 14px 18px;
+    border-top: 1px solid var(--border);
+    display: none; flex-direction: column; gap: 7px;
+  }
+  .result-title { font-size: 13px; font-weight: 600; margin-bottom: 2px; }
+  .result-sub { font-size: 11px; color: var(--text3); margin-bottom: 8px; }
+  .action-btn {
+    padding: 9px 14px; background: var(--surface2);
+    border: 1px solid var(--border2); border-radius: var(--radius);
+    color: var(--text); font-size: 12px; cursor: pointer; font-family: inherit;
+    text-align: left; font-weight: 500; transition: background .1s;
+  }
+  .action-btn:hover { background: #232323; }
+  .action-btn.primary { background: var(--accent); border-color: var(--accent); color: white; }
+  .action-btn.primary:hover { opacity: .88; }
+
+  /* ── Loading overlay ── */
+  .loading-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.7); backdrop-filter: blur(4px);
+    z-index: 100; align-items: center; justify-content: center; flex-direction: column; gap: 14px;
+  }
+  .loading-overlay.show { display: flex; }
+  .spinner {
+    width: 36px; height: 36px;
+    border: 3px solid rgba(255,255,255,.1);
+    border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-size: 14px; color: var(--text2); }
+
+  /* ── Footer ── */
+  footer {
+    margin-top: 60px; padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 10px;
+    font-size: 12px; color: var(--text3);
+  }
+  footer a { color: var(--text3); text-decoration: none; }
+  footer a:hover { color: var(--text2); }
+
+  /* ── Privacy modal ── */
+  .modal-bg {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,.8); z-index: 200;
+    align-items: center; justify-content: center; padding: 20px;
+  }
+  .modal-bg.show { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border2);
+    border-radius: var(--radius2); max-width: 560px; width: 100%;
+    max-height: 80vh; overflow-y: auto; padding: 28px;
+  }
+  .modal h2 { font-size: 18px; margin-bottom: 16px; }
+  .modal h3 { font-size: 13px; font-weight: 600; margin: 16px 0 6px; color: var(--text2); }
+  .modal p { font-size: 13px; color: var(--text2); line-height: 1.7; margin-bottom: 8px; }
+  .modal-close {
+    width: 100%; margin-top: 20px; padding: 10px;
+    background: var(--surface2); border: 1px solid var(--border2);
+    border-radius: var(--radius); color: var(--text); cursor: pointer; font-family: inherit;
+  }
+
+  /* ── Note box ── */
+  .note {
+    font-size: 11px; color: var(--text3); padding: 10px 14px;
+    background: var(--surface2); border-radius: 8px; line-height: 1.6;
+    margin-top: 10px; display: none;
+  }
+  .note strong { color: var(--text2); }
+
+  /* ── Customize panel toggle buttons ── */
+  .grad-dir, .mod-shape, .blend-btn {
+    font-size: 11px; padding: 5px 11px; border-radius: 20px;
+    border: 1px solid var(--border); color: var(--text3);
+    background: transparent; cursor: pointer; font-family: inherit; transition: all .1s;
+  }
+  .grad-dir:hover, .mod-shape:hover, .blend-btn:hover { color: var(--text2); border-color: var(--border2); }
+  .grad-dir.on, .mod-shape.on, .blend-btn.on {
+    background: var(--surface2); color: var(--text); border-color: var(--accent);
+  }
+
+  /* ── Logo position grid ── */
+  .pos-grid {
+    display: grid; grid-template-columns: repeat(3,1fr); gap: 4px; width: 90px;
+  }
+  .pos-btn {
+    width: 26px; height: 26px; border-radius: 5px;
+    border: 1px solid var(--border); background: transparent;
+    cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-size: 8px; color: var(--text3); transition: all .1s;
+  }
+  .pos-btn:hover { border-color: var(--border2); color: var(--text2); }
+  .pos-btn.on { background: var(--surface2); border-color: var(--accent); color: var(--accent2); }
+
+  /* ── Sliders ── */
+  input[type=range] {
+    -webkit-appearance: none; width: 100%; height: 4px;
+    background: var(--border2); border-radius: 2px; outline: none; cursor: pointer;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 14px; height: 14px;
+    border-radius: 50%; background: var(--accent); cursor: pointer;
+  }
+  input[type=range]::-moz-range-thumb {
+    width: 14px; height: 14px; border-radius: 50%; background: var(--accent);
+    border: none; cursor: pointer;
+  }
+</style>
+</head>
+<body>
+
+  <div id="status-banner" style="background:rgba(251,146,60,.12);border-bottom:1px solid rgba(251,146,60,.25);padding:8px 20px;font-size:12px;color:#fb923c;text-align:center;">
+    ⚠ AI background generation is temporarily unavailable — Pollinations.ai is experiencing an outage on their end. Built-in scenes still work perfectly.
+  </div>
+
+<div class="page">
+  <header>
+    <a class="logo" href="#">
+      <div class="logo-box">
+        <svg viewBox="0 0 18 18"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="11" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="2.2" height="2.2" rx=".4"/><rect x="14.8" y="11" width="2.2" height="2.2" rx=".4"/><rect x="11" y="14.8" width="2.2" height="2.2" rx=".4"/><rect x="14.8" y="14.8" width="2.2" height="2.2" rx=".4"/></svg>
+      </div>
+      <span class="logo-text">Qr<span>o</span></span>
+    </a>
+    <div class="header-badges">
+      <span class="badge">Free forever</span>
+      <span class="badge">Open source</span>
+      <span class="badge ai">✦ AI-powered</span>
+    </div>
+  </header>
+
+  <div class="hero">
+    <h1>QR codes that <span>actually look good</span></h1>
+    <p>Paste your link, pick a style, add an AI background. Free, no sign-up, no watermarks.</p>
+  </div>
+
+  <div class="main-grid">
+    <!-- Left: Controls -->
+    <div>
+      <div class="card" style="margin-bottom: 16px;">
+        <span class="slabel">Your link</span>
+        <input class="inp" type="text" id="url-input" placeholder="https://open.spotify.com/..." />
+
+        <span class="slabel">Quick brands</span>
+        <div class="brands" id="brands-row"></div>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+          <span class="slabel" style="margin-bottom:0">QR Style</span>
+          <span id="style-count" style="font-size:11px;color:var(--text3)"></span>
+        </div>
+        <div class="cats" id="cats-row"></div>
+        <div class="style-grid" id="style-grid"></div>
+      </div>
+
+      <div class="card" style="margin-bottom: 16px;">
+        <span class="slabel">Background <span style="font-size:10px;text-transform:none;letter-spacing:0;color:var(--text3);font-weight:400">(optional — image shows through the QR)</span></span>
+        <div class="bg-tabs">
+          <button class="bg-tab active" onclick="setBgMode('none',this)">None</button>
+          <button class="bg-tab" onclick="setBgMode('ai',this)">✦ AI image</button>
+          <button class="bg-tab" onclick="setBgMode('scene',this)">Built-in scene</button>
+          <button class="bg-tab" onclick="setBgMode('upload',this)">Upload photo</button>
+        </div>
+
+        <div id="bg-none" class="bg-content">QR uses the style's background color.</div>
+
+        <div id="bg-ai" class="bg-content" style="display:none">
+          <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Describe any image — Pollinations.ai generates it free, then it appears behind your QR:</div>
+          <div class="ai-prompt-row">
+            <input type="text" id="ai-prompt" placeholder="pizza, deep ocean, neon city, forest...">
+            <button class="ai-try-btn" onclick="previewAiBg()">Preview</button>
+          </div>
+          <div id="ai-preview" style="margin-top:8px;display:none">
+            <img id="ai-preview-img" style="width:100%;border-radius:8px;border:1px solid var(--border);display:block;" />
+            <div style="font-size:10px;color:var(--text3);margin-top:4px;">✓ This image will show through your QR</div>
+          </div>
+          <div id="ai-loading" style="display:none;font-size:12px;color:var(--text3);padding:10px 0;">Generating AI image...</div>
+        </div>
+
+        <div id="bg-scene" class="bg-content" style="display:none">
+          <div class="scene-grid" id="scene-grid"></div>
+          <div class="bg-previews" id="scene-previews"></div>
+        </div>
+
+        <div id="bg-upload" class="bg-content" style="display:none">
+          <div class="upload-area" onclick="document.getElementById('bg-file').click()" id="upload-label">
+            Click to upload a photo — it will show through the QR modules
+          </div>
+          <input type="file" id="bg-file" accept="image/*" style="display:none" onchange="onFileUpload(this)">
+        </div>
+      </div>
+
+      <!-- Customize panel -->
+      <div class="card" style="margin-bottom:16px;">
+        <div style="display:flex;align-items:center;justify-content:space-between;cursor:pointer;user-select:none;" onclick="toggleCustomize()">
+          <span class="slabel" style="margin-bottom:0;">⚙ Customize</span>
+          <span id="cust-arrow" style="font-size:12px;color:var(--text3);transition:transform .2s;">▼</span>
+        </div>
+        <div id="cust-panel" style="display:none;margin-top:14px;">
+
+          <!-- Colors -->
+          <div style="margin-bottom:14px;">
+            <span class="slabel">QR Colors</span>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;">
+              <div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Background</div>
+                <input type="color" id="c-bg" value="#061206" oninput="syncColorFromPicker('c-bg','c-bg-hex')" style="width:100%;height:32px;border-radius:6px;border:1px solid var(--border2);background:none;cursor:pointer;padding:2px;">
+                <input type="text" id="c-bg-hex" value="#061206" oninput="syncColorFromHex('c-bg-hex','c-bg')" style="width:100%;margin-top:4px;padding:4px 7px;font-size:11px;font-family:monospace;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Dot color 1</div>
+                <input type="color" id="c-dot" value="#4ade80" oninput="syncColorFromPicker('c-dot','c-dot-hex')" style="width:100%;height:32px;border-radius:6px;border:1px solid var(--border2);background:none;cursor:pointer;padding:2px;">
+                <input type="text" id="c-dot-hex" value="#4ade80" oninput="syncColorFromHex('c-dot-hex','c-dot')" style="width:100%;margin-top:4px;padding:4px 7px;font-size:11px;font-family:monospace;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);">
+              </div>
+              <div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Dot color 2</div>
+                <input type="color" id="c-acc" value="#a3e635" oninput="syncColorFromPicker('c-acc','c-acc-hex')" style="width:100%;height:32px;border-radius:6px;border:1px solid var(--border2);background:none;cursor:pointer;padding:2px;">
+                <input type="text" id="c-acc-hex" value="#a3e635" oninput="syncColorFromHex('c-acc-hex','c-acc')" style="width:100%;margin-top:4px;padding:4px 7px;font-size:11px;font-family:monospace;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);">
+              </div>
+            </div>
+          </div>
+
+          <!-- Gradient direction -->
+          <div style="margin-bottom:14px;">
+            <span class="slabel">Gradient Direction</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="grad-dir on" data-dir="diagonal" onclick="setGradDir('diagonal',this)">↘ Diagonal</button>
+              <button class="grad-dir" data-dir="horizontal" onclick="setGradDir('horizontal',this)">→ Horizontal</button>
+              <button class="grad-dir" data-dir="vertical" onclick="setGradDir('vertical',this)">↓ Vertical</button>
+              <button class="grad-dir" data-dir="radial" onclick="setGradDir('radial',this)">◎ Radial</button>
+              <button class="grad-dir" data-dir="solid" onclick="setGradDir('solid',this)">■ Solid</button>
+            </div>
+          </div>
+
+          <!-- Module shape -->
+          <div style="margin-bottom:14px;">
+            <span class="slabel">Module Shape</span>
+            <div style="display:flex;gap:6px;flex-wrap:wrap;">
+              <button class="mod-shape on" data-shape="square" onclick="setModShape('square',this)">◼ Square</button>
+              <button class="mod-shape" data-shape="rounded" onclick="setModShape('rounded',this)">▣ Rounded</button>
+              <button class="mod-shape" data-shape="dots" onclick="setModShape('dots',this)">⬤ Dots</button>
+              <button class="mod-shape" data-shape="diamond" onclick="setModShape('diamond',this)">◆ Diamond</button>
+            </div>
+          </div>
+
+          <!-- Logo customization -->
+          <div id="logo-cust-section" style="display:none;">
+            <div style="height:1px;background:var(--border);margin-bottom:14px;"></div>
+            <span class="slabel">Logo</span>
+
+            <!-- Logo source tabs -->
+            <div style="display:flex;gap:4px;margin-bottom:12px;">
+              <button class="bg-tab active" id="logo-src-brand" onclick="setLogoSrc('brand',this)">Brand</button>
+              <button class="bg-tab" id="logo-src-custom" onclick="setLogoSrc('custom',this)">Upload custom</button>
+              <button class="bg-tab" id="logo-src-text" onclick="setLogoSrc('text',this)">Text / emoji</button>
+            </div>
+
+            <!-- Custom upload -->
+            <div id="logo-upload-area" style="display:none;margin-bottom:12px;">
+              <div class="upload-area" onclick="document.getElementById('logo-file').click()" id="logo-upload-label">
+                Click to upload your logo (PNG, SVG, JPG)
+              </div>
+              <input type="file" id="logo-file" accept="image/*" style="display:none" onchange="onLogoUpload(this)">
+            </div>
+
+            <!-- Text/emoji logo -->
+            <div id="logo-text-area" style="display:none;margin-bottom:12px;">
+              <input type="text" id="logo-text-input" placeholder="Type text or emoji e.g. 🍕 or QR"
+                style="width:100%;padding:9px 12px;background:var(--surface2);border:1px solid var(--border2);border-radius:8px;color:var(--text);font-size:16px;font-family:inherit;outline:none;"
+                oninput="updateTextLogoPreview()">
+            </div>
+
+            <!-- Logo color controls -->
+            <div style="display:flex;flex-direction:column;gap:10px;">
+
+              <!-- Background color + shape -->
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+                <div>
+                  <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Background color</div>
+                  <div style="display:flex;gap:5px;align-items:center;">
+                    <input type="color" id="logo-bg-color" value="#ffffff"
+                      oninput="document.getElementById('logo-bg-color-hex').value=this.value"
+                      style="width:36px;height:28px;border-radius:6px;border:1px solid var(--border2);background:none;cursor:pointer;padding:2px;flex-shrink:0;">
+                    <input type="text" id="logo-bg-color-hex" value="#ffffff"
+                      oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('logo-bg-color').value=this.value"
+                      style="flex:1;padding:4px 7px;font-size:11px;font-family:monospace;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);">
+                  </div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text3);margin-bottom:4px;">Icon / text color</div>
+                  <div style="display:flex;gap:5px;align-items:center;">
+                    <input type="color" id="logo-fg-color" value="#000000"
+                      oninput="document.getElementById('logo-fg-color-hex').value=this.value"
+                      style="width:36px;height:28px;border-radius:6px;border:1px solid var(--border2);background:none;cursor:pointer;padding:2px;flex-shrink:0;">
+                    <input type="text" id="logo-fg-color-hex" value="#000000"
+                      oninput="if(/^#[0-9a-fA-F]{6}$/.test(this.value))document.getElementById('logo-fg-color').value=this.value"
+                      style="flex:1;padding:4px 7px;font-size:11px;font-family:monospace;border-radius:6px;border:1px solid var(--border2);background:var(--surface2);color:var(--text);">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Background shape -->
+              <div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Background shape</div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                  <button class="blend-btn on" onclick="setLogoBgShape('circle',this)">● Circle</button>
+                  <button class="blend-btn" onclick="setLogoBgShape('rounded',this)">▣ Rounded</button>
+                  <button class="blend-btn" onclick="setLogoBgShape('square',this)">■ Square</button>
+                  <button class="blend-btn" onclick="setLogoBgShape('none',this)">✕ None</button>
+                </div>
+              </div>
+
+              <!-- Size -->
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:11px;color:var(--text3);">Size</span>
+                  <span id="logo-size-val" style="font-size:11px;color:var(--text2);">Medium</span>
+                </div>
+                <input type="range" id="logo-size" min="4" max="14" value="9" step="1" oninput="updateLogoLabel()" style="width:100%;">
+              </div>
+
+              <!-- Opacity -->
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:11px;color:var(--text3);">Opacity</span>
+                  <span id="logo-opacity-val" style="font-size:11px;color:var(--text2);">90%</span>
+                </div>
+                <input type="range" id="logo-opacity" min="10" max="100" value="90" step="5" oninput="updateLogoLabel()" style="width:100%;">
+              </div>
+
+              <!-- Background opacity -->
+              <div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:5px;">
+                  <span style="font-size:11px;color:var(--text3);">Background opacity</span>
+                  <span id="logo-bg-val" style="font-size:11px;color:var(--text2);">Transparent</span>
+                </div>
+                <input type="range" id="logo-bg-opacity" min="0" max="100" value="0" step="5" oninput="updateLogoLabel()" style="width:100%;">
+              </div>
+
+              <!-- Position -->
+              <div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Position</div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                  <div class="pos-grid">
+                    <button class="pos-btn" onclick="setLogoPos('tl',this)">↖</button>
+                    <button class="pos-btn" onclick="setLogoPos('tc',this)">↑</button>
+                    <button class="pos-btn" onclick="setLogoPos('tr',this)">↗</button>
+                    <button class="pos-btn" onclick="setLogoPos('cl',this)">←</button>
+                    <button class="pos-btn on" onclick="setLogoPos('center',this)">●</button>
+                    <button class="pos-btn" onclick="setLogoPos('cr',this)">→</button>
+                    <button class="pos-btn" onclick="setLogoPos('bl',this)">↙</button>
+                    <button class="pos-btn" onclick="setLogoPos('bc',this)">↓</button>
+                    <button class="pos-btn" onclick="setLogoPos('br',this)">↘</button>
+                  </div>
+                  <div style="font-size:11px;color:var(--text3);line-height:1.6;">Pick where<br>the logo sits</div>
+                </div>
+              </div>
+
+              <!-- Blend mode -->
+              <div>
+                <div style="font-size:11px;color:var(--text3);margin-bottom:6px;">Blend mode</div>
+                <div style="display:flex;gap:5px;flex-wrap:wrap;">
+                  <button class="blend-btn on" data-blend="normal" onclick="setBlend('normal',this)">Normal</button>
+                  <button class="blend-btn" data-blend="screen" onclick="setBlend('screen',this)">Screen</button>
+                  <button class="blend-btn" data-blend="overlay" onclick="setBlend('overlay',this)">Overlay</button>
+                  <button class="blend-btn" data-blend="multiply" onclick="setBlend('multiply',this)">Multiply</button>
+                  <button class="blend-btn" data-blend="color-dodge" onclick="setBlend('color-dodge',this)">Dodge</button>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- QR opacity when bg present -->
+          <div style="height:1px;background:var(--border);margin:14px 0;"></div>
+          <div>
+            <div style="display:flex;justify-content:space-between;margin-bottom:5px;"><span style="font-size:11px;color:var(--text3);">QR opacity (over background)</span><span id="qr-opacity-val" style="font-size:11px;color:var(--text2);">85%</span></div>
+            <input type="range" id="qr-opacity" min="30" max="100" value="85" step="5" oninput="document.getElementById('qr-opacity-val').textContent=this.value+'%'" style="width:100%;">
+          </div>
+
+        </div>
+      </div>
+
+      <button class="gen-btn" id="gen-btn" onclick="generate()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l1.8 6.2L20 10l-6.2 1.8L12 18l-1.8-6.2L4 10l6.2-1.8Z"/></svg>
+        Generate QR Code
+      </button>
+    </div>
+
+    <!-- Right: Preview -->
+    <div class="result-panel" id="result-panel">
+      <div class="result-placeholder" id="result-placeholder">
+        <div class="placeholder-icon">
+          <svg width="24" height="24" viewBox="0 0 18 18" fill="var(--text3)"><rect x="1" y="1" width="6" height="6" rx="1.5"/><rect x="11" y="1" width="6" height="6" rx="1.5"/><rect x="1" y="11" width="6" height="6" rx="1.5"/><rect x="11" y="11" width="2.2" height="2.2" rx=".4"/><rect x="14.8" y="11" width="2.2" height="2.2" rx=".4"/><rect x="11" y="14.8" width="2.2" height="2.2" rx=".4"/><rect x="14.8" y="14.8" width="2.2" height="2.2" rx=".4"/></svg>
+        </div>
+        <div style="font-size:13px;margin-bottom:4px;">Your QR code will appear here</div>
+        <div style="font-size:11px;color:var(--text3)">Fill in the options and hit generate</div>
+      </div>
+      <div class="result-canvas-wrap" id="result-canvas-wrap">
+        <canvas id="result-canvas" width="400" height="400"></canvas>
+      </div>
+      <div class="result-actions" id="result-actions">
+        <div class="result-title" id="result-title"></div>
+        <div class="result-sub" id="result-sub"></div>
+        <button class="action-btn primary" onclick="downloadQR()">↓ Download PNG</button>
+        <button class="action-btn" onclick="generate()">↺ Regenerate variation</button>
+        <button class="action-btn" id="share-btn" onclick="shareQR()">Share link</button>
+      </div>
+      <div class="note" id="result-note"></div>
+    </div>
+  </div>
+
+  <footer>
+    <span>© 2026 Qro · MIT License · <a href="https://github.com" target="_blank">GitHub ↗</a></span>
+    <span style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+      <a href="#" onclick="showThanks();return false;">Special Thanks ♥</a>
+      <span style="color:var(--border2)">·</span>
+      <a href="#" onclick="showPrivacy();return false;">Privacy Policy</a>
+    </span>
+  </footer>
+</div>
+
+<!-- Loading overlay -->
+<div class="loading-overlay" id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">Generating...</div>
+</div>
+
+<!-- Special Thanks modal -->
+<div class="modal-bg" id="thanks-modal" onclick="if(event.target===this)closeThanks()">
+  <div class="modal" style="max-width:480px;text-align:center;">
+    <div style="font-size:32px;margin-bottom:6px;">♥</div>
+    <h2 style="font-size:22px;margin-bottom:4px;">Special Thanks</h2>
+    <p style="font-size:13px;color:var(--text3);margin-bottom:28px;">Qro is built on the shoulders of these amazing open projects.</p>
+
+    <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:28px;">
+
+      <!-- Pollinations AI -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;text-align:left;display:flex;align-items:center;gap:16px;">
+        <div style="width:44px;height:44px;border-radius:10px;background:#0a0a0a;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:22px;">🌸</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;margin-bottom:3px;">Pollinations AI</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.5;">Free, unlimited AI image generation — no API key needed. Powers the AI background feature.</div>
+          <a href="https://pollinations.ai" target="_blank" style="font-size:11px;color:var(--accent2);text-decoration:none;margin-top:4px;display:inline-block;">pollinations.ai ↗</a>
+        </div>
+      </div>
+
+      <!-- qrcode.js -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;text-align:left;display:flex;align-items:center;gap:16px;">
+        <div style="width:44px;height:44px;border-radius:10px;background:#0a0a0a;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <svg width="24" height="24" viewBox="0 0 18 18" fill="var(--text2)"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="11" y="1" width="6" height="6" rx="1"/><rect x="1" y="11" width="6" height="6" rx="1"/><rect x="11" y="11" width="2" height="2" rx=".3"/><rect x="14" y="11" width="2" height="2" rx=".3"/><rect x="11" y="14" width="2" height="2" rx=".3"/><rect x="14" y="14" width="2" height="2" rx=".3"/></svg>
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;margin-bottom:3px;">qrcode.js</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.5;">Open-source JavaScript library that generates real, scannable QR codes entirely in your browser — no server needed.</div>
+          <a href="https://github.com/davidshimjs/qrcodejs" target="_blank" style="font-size:11px;color:var(--accent2);text-decoration:none;margin-top:4px;display:inline-block;">github.com/davidshimjs/qrcodejs ↗</a>
+        </div>
+      </div>
+
+      <!-- Simple Icons -->
+      <div style="background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:18px 20px;text-align:left;display:flex;align-items:center;gap:16px;">
+        <div style="width:44px;height:44px;border-radius:10px;background:#0a0a0a;border:1px solid var(--border2);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:20px;">◈</div>
+        <div style="flex:1;min-width:0;">
+          <div style="font-size:14px;font-weight:700;margin-bottom:3px;">Simple Icons</div>
+          <div style="font-size:12px;color:var(--text2);line-height:1.5;">Free CDN serving official SVG icons for thousands of brands. Powers the brand logos in Qro.</div>
+          <a href="https://simpleicons.org" target="_blank" style="font-size:11px;color:var(--accent2);text-decoration:none;margin-top:4px;display:inline-block;">simpleicons.org ↗</a>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="border-top:1px solid var(--border);padding-top:20px;margin-bottom:20px;">
+      <p style="font-size:14px;color:var(--text2);line-height:1.7;">Without these services, this project wouldn't exist.<br><strong style="color:var(--text);">Thank You! :)</strong></p>
+    </div>
+
+    <button class="modal-close" onclick="closeThanks()">Close</button>
+  </div>
+</div>
+
+<script>
+  function showThanks() { document.getElementById('thanks-modal').classList.add('show'); }
+  function closeThanks() { document.getElementById('thanks-modal').classList.remove('show'); }
+</script>
+<script>
+// ─────────────────────────────────────────────
+// QR matrix pattern (21x21 finder + data modules)
+// ─────────────────────────────────────────────
+const QR_PAT = [
+  [1,1,1,1,1,1,1,0,1,0,0,1,0,0,1,1,1,1,1,1,1],
+  [1,0,0,0,0,0,1,0,0,0,1,0,1,0,1,0,0,0,0,0,1],
+  [1,0,1,1,1,0,1,0,1,1,0,1,0,0,1,0,1,1,1,0,1],
+  [1,0,1,1,1,0,1,0,0,0,1,0,1,0,1,0,1,1,1,0,1],
+  [1,0,1,1,1,0,1,0,1,1,0,1,0,0,1,0,1,1,1,0,1],
+  [1,0,0,0,0,0,1,0,0,0,1,0,1,0,1,0,0,0,0,0,1],
+  [1,1,1,1,1,1,1,0,1,0,1,0,1,0,1,1,1,1,1,1,1],
+  [0,0,0,0,0,0,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0],
+  [1,1,0,1,0,1,1,1,0,1,1,0,1,1,1,0,1,0,1,1,0],
+  [0,1,0,0,1,0,0,0,1,0,0,1,0,0,0,1,0,1,0,0,1],
+  [1,0,1,1,0,1,1,0,0,1,0,0,1,0,1,0,1,0,1,1,0],
+  [0,1,0,0,1,0,0,1,1,0,1,0,0,1,0,1,0,1,0,0,1],
+  [1,0,0,1,0,1,1,0,0,1,0,1,1,0,1,0,1,0,0,1,0],
+  [0,0,0,0,0,0,0,0,0,1,0,0,1,0,0,1,0,0,1,0,1],
+  [1,1,1,1,1,1,1,0,1,0,1,0,0,1,1,0,0,1,0,1,0],
+  [1,0,0,0,0,0,1,0,0,1,0,1,1,0,0,1,1,0,1,0,1],
+  [1,0,1,1,1,0,1,1,1,0,1,0,0,1,0,0,1,1,0,1,0],
+  [1,0,1,1,1,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,1],
+  [1,0,1,1,1,0,1,0,1,0,1,0,0,1,0,1,1,0,0,1,0],
+  [1,0,0,0,0,0,1,0,0,1,0,1,1,0,1,0,0,1,1,0,1],
+  [1,1,1,1,1,1,1,0,1,0,1,0,0,1,0,1,0,0,1,1,0],
+];
+
+// ─────────────────────────────────────────────
+// Styles
+// ─────────────────────────────────────────────
+const STYLES = [
+  {id:'forest',   name:'Forest',      cat:'Nature', bg:'#061206', dot:'#4ade80', acc:'#a3e635'},
+  {id:'ocean',    name:'Ocean',       cat:'Nature', bg:'#030d1e', dot:'#38bdf8', acc:'#67e8f9'},
+  {id:'cherry',   name:'Cherry',      cat:'Nature', bg:'#150510', dot:'#f472b6', acc:'#fda4af'},
+  {id:'circuit',  name:'Circuit',     cat:'Tech',   bg:'#040c04', dot:'#22d65a', acc:'#86efac'},
+  {id:'cyber',    name:'Cyberpunk',   cat:'Tech',   bg:'#07001a', dot:'#c084fc', acc:'#f0abfc'},
+  {id:'holo',     name:'Hologram',    cat:'Tech',   bg:'#010d1c', dot:'#67e8f9', acc:'#a5f3fc'},
+  {id:'galaxy',   name:'Galaxy',      cat:'Space',  bg:'#02000e', dot:'#a78bfa', acc:'#ddd6fe'},
+  {id:'aurora',   name:'Aurora',      cat:'Space',  bg:'#010e0a', dot:'#34d399', acc:'#6ee7b7'},
+  {id:'pizza',    name:'Pizza',       cat:'Food',   bg:'#130500', dot:'#fb923c', acc:'#fbbf24'},
+  {id:'glass',    name:'Liquid Glass',cat:'Style',  bg:'#091520', dot:'#93c5fd', acc:'#bfdbfe'},
+  {id:'vhs',      name:'VHS Glitch',  cat:'Style',  bg:'#060006', dot:'#f0abfc', acc:'#e879f9'},
+  {id:'pixel',    name:'Pixel Art',   cat:'Style',  bg:'#0c0c0c', dot:'#facc15', acc:'#fef08a'},
+  {id:'sunrise',  name:'Sunrise',     cat:'Nature', bg:'#1a0500', dot:'#fb923c', acc:'#fbbf24'},
+  {id:'ice',      name:'Ice',         cat:'Style',  bg:'#010c18', dot:'#bae6fd', acc:'#e0f2fe'},
+  {id:'lava',     name:'Lava',        cat:'Style',  bg:'#1a0000', dot:'#ef4444', acc:'#fbbf24'},
+  {id:'mint',     name:'Mint',        cat:'Nature', bg:'#011208', dot:'#6ee7b7', acc:'#d1fae5'},
+];
+
+// ─────────────────────────────────────────────
+// Brands
+// ─────────────────────────────────────────────
+// SVG paths from Simple Icons (simpleicons.org) — embedded so no CDN needed
+const BRAND_SVGS = {
+  Spotify: {
+    bg:'#1DB954', fg:'#fff',
+    shape: 'circle',
+    path: 'M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z'
+  },
+  Instagram: {
+    bg: 'linear', fg:'#fff',
+    gradColors: ['#f09433','#e6683c','#dc2743','#bc1888'],
+    path: 'M12 0C8.74 0 8.333.015 7.053.072 5.775.132 4.905.333 4.14.63c-.789.306-1.459.717-2.126 1.384S.935 3.35.63 4.14C.333 4.905.131 5.775.072 7.053.012 8.333 0 8.74 0 12c0 3.259.013 3.668.072 4.948.06 1.277.261 2.148.558 2.913.306.788.717 1.459 1.384 2.126.667.666 1.336 1.079 2.126 1.384.766.296 1.636.499 2.913.558C8.333 23.988 8.74 24 12 24c3.259 0 3.668-.013 4.948-.072 1.277-.06 2.148-.262 2.913-.558.788-.306 1.459-.718 2.126-1.384.666-.667 1.079-1.335 1.384-2.126.296-.765.499-1.636.558-2.913.06-1.28.072-1.689.072-4.948 0-3.259-.013-3.667-.072-4.947-.06-1.277-.262-2.149-.558-2.913-.306-.789-.718-1.459-1.384-2.126C21.319 1.347 20.651.935 19.86.63c-.765-.297-1.636-.499-2.913-.558C15.667.012 15.259 0 12 0zm0 2.16c3.203 0 3.585.016 4.85.071 1.17.055 1.805.249 2.227.415.562.217.96.477 1.382.896.419.42.679.819.896 1.381.164.422.36 1.057.413 2.227.057 1.266.07 1.646.07 4.85s-.015 3.585-.074 4.85c-.061 1.17-.256 1.805-.421 2.227-.224.562-.479.96-.899 1.382-.419.419-.824.679-1.38.896-.42.164-1.065.36-2.235.413-1.274.057-1.649.07-4.859.07-3.211 0-3.586-.015-4.859-.074-1.171-.061-1.816-.256-2.236-.421-.569-.224-.96-.479-1.379-.899-.421-.419-.69-.824-.9-1.38-.165-.42-.359-1.065-.42-2.235-.045-1.26-.061-1.649-.061-4.844 0-3.196.016-3.586.061-4.861.061-1.17.255-1.814.42-2.234.21-.57.479-.96.9-1.381.419-.419.81-.689 1.379-.898.42-.166 1.051-.361 2.221-.421 1.275-.045 1.65-.06 4.859-.06zm0 3.678c-3.405 0-6.162 2.76-6.162 6.162 0 3.405 2.76 6.162 6.162 6.162 3.405 0 6.162-2.76 6.162-6.162 0-3.405-2.76-6.162-6.162-6.162zM12 16c-2.21 0-4-1.79-4-4s1.79-4 4-4 4 1.79 4 4-1.79 4-4 4zm7.846-10.405c0 .795-.646 1.44-1.44 1.44-.795 0-1.44-.646-1.44-1.44 0-.794.646-1.439 1.44-1.439.793-.001 1.44.645 1.44 1.439z'
+  },
+  WhatsApp: {
+    bg:'#25D366', fg:'#fff',
+    path: 'M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z'
+  },
+  YouTube: {
+    bg:'#FF0000', fg:'#fff',
+    path: 'M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z'
+  },
+  TikTok: {
+    bg:'#000000', fg:'#fff',
+    path: 'M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z'
+  },
+  LinkedIn: {
+    bg:'#0A66C2', fg:'#fff',
+    path: 'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z'
+  },
+};
+
+const BRANDS = {
+  Spotify:   { url:'https://spotify.com',   key:'Spotify'   },
+  Instagram: { url:'https://instagram.com', key:'Instagram' },
+  WhatsApp:  { url:'https://wa.me',         key:'WhatsApp'  },
+  YouTube:   { url:'https://youtube.com',   key:'YouTube'   },
+  TikTok:    { url:'https://tiktok.com',    key:'TikTok'    },
+  LinkedIn:  { url:'https://linkedin.com',  key:'LinkedIn'  },
+};
+
+// ─────────────────────────────────────────────
+// Scene generators
+// ─────────────────────────────────────────────
+const SCENES = {
+  'Forest': (c, W) => {
+    const ctx = c.getContext('2d');
+    const sky = ctx.createLinearGradient(0,0,0,W);
+    sky.addColorStop(0,'#041504'); sky.addColorStop(1,'#0a240a');
+    ctx.fillStyle = sky; ctx.fillRect(0,0,W,W);
+    for(let i=0;i<80;i++){ctx.fillStyle=`rgba(255,255,255,${.04+Math.random()*.18})`;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*W*.45,.3+Math.random()*.7,0,Math.PI*2);ctx.fill();}
+    for(let i=0;i<22;i++){const x=Math.random()*W,h=W*.25+Math.random()*W*.55,w=6+Math.random()*16;const g=ctx.createLinearGradient(x,W-h,x,W);g.addColorStop(0,'#1a5c1a');g.addColorStop(.6,'#0d3a0d');g.addColorStop(1,'#061206');ctx.fillStyle=g;ctx.beginPath();ctx.moveTo(x-w/2,W);ctx.lineTo(x,W-h);ctx.lineTo(x+w/2,W);ctx.fill();}
+  },
+  'Ocean': (c, W) => {
+    const ctx = c.getContext('2d');
+    const g = ctx.createLinearGradient(0,0,0,W);
+    g.addColorStop(0,'#010614'); g.addColorStop(.5,'#021228'); g.addColorStop(1,'#010818');
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,W);
+    for(let i=0;i<100;i++){ctx.fillStyle=`rgba(56,189,248,${.03+Math.random()*.14})`;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*W,.3+Math.random()*2.5,0,Math.PI*2);ctx.fill();}
+    for(let i=0;i<8;i++){ctx.strokeStyle=`rgba(103,232,249,${.05+Math.random()*.1})`;ctx.lineWidth=.5+Math.random()*1.2;ctx.beginPath();const y=W*.25+i*(W*.09);for(let x=0;x<=W;x+=15)ctx.lineTo(x,y+Math.sin(x*.05+i)*10);ctx.stroke();}
+  },
+  'Space': (c, W) => {
+    const ctx = c.getContext('2d');
+    ctx.fillStyle='#02000e'; ctx.fillRect(0,0,W,W);
+    for(let i=0;i<250;i++){const b=.08+Math.random()*.92;ctx.fillStyle=`rgba(${190+Math.random()*65},${170+Math.random()*85},255,${b})`;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*W,.2+Math.random()*1.2,0,Math.PI*2);ctx.fill();}
+    const gn=ctx.createRadialGradient(W*.3,W*.35,0,W*.3,W*.35,W*.38);gn.addColorStop(0,'rgba(167,139,250,.2)');gn.addColorStop(1,'transparent');ctx.fillStyle=gn;ctx.fillRect(0,0,W,W);
+    const gn2=ctx.createRadialGradient(W*.75,W*.65,0,W*.75,W*.65,W*.25);gn2.addColorStop(0,'rgba(52,211,153,.12)');gn2.addColorStop(1,'transparent');ctx.fillStyle=gn2;ctx.fillRect(0,0,W,W);
+  },
+  'Neon City': (c, W) => {
+    const ctx = c.getContext('2d');
+    ctx.fillStyle='#05001a'; ctx.fillRect(0,0,W,W);
+    const neons=['#c084fc','#f472b6','#67e8f9','#4ade80','#fb923c'];
+    for(let i=0;i<14;i++){const x=(i/14)*W,bh=W*.18+Math.random()*W*.52,bw=W/16;ctx.fillStyle='#0a0020';ctx.fillRect(x,W-bh,bw,bh);for(let wy=W-bh+6;wy<W-3;wy+=12)for(let wx=x+3;wx<x+bw-3;wx+=9)if(Math.random()>.42){ctx.fillStyle=neons[Math.floor(Math.random()*neons.length)]+'99';ctx.fillRect(wx,wy,5,7);}}
+    const gr=ctx.createLinearGradient(0,W*.45,0,W);gr.addColorStop(0,'transparent');gr.addColorStop(1,'rgba(192,132,252,.1)');ctx.fillStyle=gr;ctx.fillRect(0,W*.45,W,W*.55);
+    for(let i=0;i<50;i++){ctx.fillStyle=`rgba(255,255,255,${.04+Math.random()*.18})`;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*W*.3,.3+Math.random()*.8,0,Math.PI*2);ctx.fill();}
+  },
+  'Aurora': (c, W) => {
+    const ctx = c.getContext('2d');
+    ctx.fillStyle='#010e0a'; ctx.fillRect(0,0,W,W);
+    for(let i=0;i<80;i++){ctx.fillStyle=`rgba(255,255,255,${.04+Math.random()*.18})`;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*W*.38,.2+Math.random()*.7,0,Math.PI*2);ctx.fill();}
+    [['rgba(52,211,153,.16)','rgba(52,211,153,0)'],['rgba(110,231,183,.12)','rgba(110,231,183,0)'],['rgba(34,211,107,.09)','rgba(34,211,107,0)']].forEach(([a,b],i)=>{
+      const gy=ctx.createLinearGradient(0,W*.08+i*W*.14,0,W*.55+i*W*.1);gy.addColorStop(0,a);gy.addColorStop(1,b);ctx.fillStyle=gy;ctx.beginPath();for(let x=0;x<=W;x+=18)ctx.lineTo(x,W*.18+i*W*.1+Math.sin(x*.014+i*2)*W*.07);ctx.lineTo(W,W*.7);ctx.lineTo(0,W*.7);ctx.closePath();ctx.fill();
+    });
+  },
+  'Pizza': (c, W) => {
+    const ctx = c.getContext('2d');
+    const g=ctx.createRadialGradient(W*.5,W*.5,0,W*.5,W*.5,W*.65);g.addColorStop(0,'#401500');g.addColorStop(.5,'#1c0900');g.addColorStop(1,'#0a0300');ctx.fillStyle=g;ctx.fillRect(0,0,W,W);
+    for(let i=0;i<50;i++){const cols=['#ff4500','#ff6b1a','#ff8c42','#ffd700'];ctx.fillStyle=cols[i%4]+Math.floor(25+Math.random()*80).toString(16).padStart(2,'0');ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*W,1+Math.random()*9,0,Math.PI*2);ctx.fill();}
+    for(let i=0;i<18;i++){const gr=ctx.createRadialGradient(Math.random()*W,Math.random()*W,0,Math.random()*W,Math.random()*W,15+Math.random()*45);gr.addColorStop(0,'rgba(255,120,0,.22)');gr.addColorStop(1,'transparent');ctx.fillStyle=gr;ctx.fillRect(0,0,W,W);}
+  },
+  'Watercolor': (c, W) => {
+    const ctx = c.getContext('2d');
+    ctx.fillStyle='#f0e6d3'; ctx.fillRect(0,0,W,W);
+    const blobs=[['#f9a8d4','#fce7f3'],['#93c5fd','#dbeafe'],['#86efac','#dcfce7'],['#fde68a','#fef9c3'],['#c4b5fd','#ede9fe']];
+    for(let i=0;i<30;i++){const[a,b]=blobs[i%blobs.length];const g=ctx.createRadialGradient(Math.random()*W,Math.random()*W,0,Math.random()*W,Math.random()*W,25+Math.random()*95);g.addColorStop(0,a+'cc');g.addColorStop(1,b+'22');ctx.fillStyle=g;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*W,18+Math.random()*85,0,Math.PI*2);ctx.fill();}
+  },
+};
+
+// ─────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────
+let curStyle  = STYLES[0];
+let curCat    = 'All';
+let curBrand  = null;
+let bgMode    = 'none';
+let bgImage   = null;
+let curScene  = 'Forest';
+let aiImageEl = null;
+let gradDir   = 'diagonal';
+let modShape  = 'square';
+let logoBlend = 'normal';
+let logoPos   = 'center';
+let customColors = null;
+let logoSrc   = 'brand';   // 'brand' | 'custom' | 'text'
+let customLogoImg = null;  // uploaded logo HTMLImageElement
+let logoBgShape = 'circle'; // 'circle' | 'rounded' | 'square' | 'none'
+
+// ─────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────
+const htr = h => [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];
+const val = id => document.getElementById(id).value;
+
+function getColors() {
+  if (customColors) return customColors;
+  return { bg: curStyle.bg, dot: curStyle.dot, acc: curStyle.acc || curStyle.dot };
+}
+
+// ─────────────────────────────────────────────
+// Logo drawing — fully transparent/customizable
+// ─────────────────────────────────────────────
+function setLogoSrc(src, el) {
+  logoSrc = src;
+  document.querySelectorAll('#logo-src-brand,#logo-src-custom,#logo-src-text').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('logo-upload-area').style.display = src==='custom'?'block':'none';
+  document.getElementById('logo-text-area').style.display   = src==='text'?'block':'none';
+  // Always show logo customization if not brand mode
+  if (src !== 'brand') {
+    curBrand = null;
+    renderBrands();
+    document.getElementById('logo-cust-section').style.display = 'block';
+  }
+}
+
+function onLogoUpload(inp) {
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{
+    const img=new Image();
+    img.onload=()=>{customLogoImg=img; document.getElementById('logo-upload-label').textContent='✓ '+f.name;};
+    img.src=e.target.result;
+  };
+  r.readAsDataURL(f);
+}
+
+function updateTextLogoPreview() { /* live update handled at generate time */ }
+
+function setLogoBgShape(shape, el) {
+  logoBgShape = shape;
+  document.querySelectorAll('.blend-btn[onclick^="setLogoBgShape"]').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function drawLogoOnCanvas(ctx, brand, cx, cy, r, opts = {}) {
+  const opacity   = (opts.opacity   ?? 100) / 100;
+  const bgOpacity = (opts.bgOpacity ?? 0)   / 100;
+  const blend     = opts.blend || 'normal';
+  const bgColor   = document.getElementById('logo-bg-color')?.value  || '#ffffff';
+  const fgColor   = document.getElementById('logo-fg-color')?.value  || '#000000';
+  const bgShp     = logoBgShape;
+
+  ctx.save();
+  ctx.globalCompositeOperation = blend;
+
+  // ── Background shape ──
+  if (bgOpacity > 0 && bgShp !== 'none') {
+    ctx.globalAlpha = bgOpacity;
+    ctx.fillStyle = bgColor;
+    ctx.beginPath();
+    if (bgShp === 'circle') {
+      ctx.arc(cx, cy, r * 1.18, 0, Math.PI*2);
+    } else if (bgShp === 'rounded') {
+      const s=r*1.18*2, x=cx-r*1.18, y=cy-r*1.18, rr=s*.22;
+      ctx.moveTo(x+rr,y); ctx.lineTo(x+s-rr,y);
+      ctx.quadraticCurveTo(x+s,y,x+s,y+rr); ctx.lineTo(x+s,y+s-rr);
+      ctx.quadraticCurveTo(x+s,y+s,x+s-rr,y+s); ctx.lineTo(x+rr,y+s);
+      ctx.quadraticCurveTo(x,y+s,x,y+s-rr); ctx.lineTo(x,y+rr);
+      ctx.quadraticCurveTo(x,y,x+rr,y);
+    } else {
+      const s=r*1.18*2, x=cx-r*1.18, y=cy-r*1.18;
+      ctx.rect(x,y,s,s);
+    }
+    ctx.closePath(); ctx.fill();
+  }
+
+  ctx.globalAlpha = opacity;
+  ctx.globalCompositeOperation = 'source-over';
+
+  // ── Draw the logo ──
+  if (logoSrc === 'custom' && customLogoImg) {
+    // Custom uploaded image
+    const s = r * 1.8;
+    ctx.drawImage(customLogoImg, cx-s/2, cy-s/2, s, s);
+
+  } else if (logoSrc === 'text') {
+    // Text / emoji
+    const txt = (document.getElementById('logo-text-input')?.value || '?').trim().slice(0,4);
+    ctx.fillStyle = fgColor;
+    ctx.font = `bold ${Math.round(r*1.1)}px -apple-system,sans-serif`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(txt, cx, cy);
+
+  } else if (brand) {
+    // Brand SVG path with custom fg color override
+    const d = BRAND_SVGS[brand];
+    if (!d) { ctx.restore(); return; }
+    // Background circle with brand color (or custom)
+    const useBrandBg = (bgOpacity === 0); // if no bg set, draw brand color circle
+    if (useBrandBg) {
+      if (d.bg === 'linear') {
+        const grd = ctx.createLinearGradient(cx-r,cy+r,cx+r,cy-r);
+        d.gradColors.forEach((c,i)=>grd.addColorStop(i/(d.gradColors.length-1),c));
+        ctx.fillStyle = grd;
+      } else { ctx.fillStyle = d.bg; }
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.fill();
+    }
+    // Draw SVG icon — use fgColor if user changed it from default white, else brand fg
+    const iconColor = fgColor !== '#000000' ? fgColor : d.fg;
+    ctx.fillStyle = iconColor;
+    ctx.save();
+    const scale = (r * 1.55) / 24;
+    ctx.translate(cx - 12*scale, cy - 12*scale);
+    ctx.scale(scale, scale);
+    ctx.fill(new Path2D(d.path));
+    ctx.restore();
+  }
+
+  ctx.restore();
+}
+
+// ─────────────────────────────────────────────
+// QR module drawing — supports shapes + gradient directions
+// ─────────────────────────────────────────────
+function drawQRModules(ctx, W, style, alpha, shape, direction) {
+  shape     = shape     || modShape  || 'square';
+  direction = direction || gradDir   || 'diagonal';
+  const colors  = getColors();
+  const cell    = Math.floor(W / 23);
+  const off     = Math.ceil((W - cell * 21) / 2);
+  const [dr,dg,db] = htr(colors.dot);
+  const [ar,ag,ab] = htr(colors.acc || colors.dot);
+
+  QR_PAT.forEach((row, ry) => row.forEach((v, cx) => {
+    if (!v) return;
+    let t;
+    if      (direction === 'horizontal') t = cx / 20;
+    else if (direction === 'vertical')   t = ry / 20;
+    else if (direction === 'radial')     t = Math.min(1, Math.sqrt((cx-10)**2+(ry-10)**2)/14);
+    else if (direction === 'solid')      t = 0;
+    else                                 t = (cx + ry) / 42; // diagonal default
+
+    ctx.fillStyle = `rgba(${dr*(1-t)+ar*t|0},${dg*(1-t)+ag*t|0},${db*(1-t)+ab*t|0},${alpha})`;
+
+    const x = off + cx*cell;
+    const y = off + ry*cell;
+    const s = cell - 1;
+    const c = s / 2;
+
+    if (shape === 'dots') {
+      ctx.beginPath(); ctx.arc(x + c, y + c, c * .85, 0, Math.PI*2); ctx.fill();
+    } else if (shape === 'rounded') {
+      const rr = s * .3;
+      ctx.beginPath();
+      ctx.moveTo(x+rr, y); ctx.lineTo(x+s-rr, y);
+      ctx.quadraticCurveTo(x+s, y, x+s, y+rr);
+      ctx.lineTo(x+s, y+s-rr); ctx.quadraticCurveTo(x+s, y+s, x+s-rr, y+s);
+      ctx.lineTo(x+rr, y+s); ctx.quadraticCurveTo(x, y+s, x, y+s-rr);
+      ctx.lineTo(x, y+rr); ctx.quadraticCurveTo(x, y, x+rr, y);
+      ctx.closePath(); ctx.fill();
+    } else if (shape === 'diamond') {
+      const m = s / 2;
+      ctx.beginPath();
+      ctx.moveTo(x+m, y); ctx.lineTo(x+s, y+m);
+      ctx.lineTo(x+m, y+s); ctx.lineTo(x, y+m);
+      ctx.closePath(); ctx.fill();
+    } else {
+      ctx.fillRect(x+.5, y+.5, s, s);
+    }
+  }));
+}
+
+// ─────────────────────────────────────────────
+// Style preview cards
+// ─────────────────────────────────────────────
+function drawStylePreview(canvas, style) {
+  const W = canvas.width;
+  const ctx = canvas.getContext('2d');
+  ctx.fillStyle = style.bg; ctx.fillRect(0,0,W,W);
+  if (style.cat==='Space') { for(let i=0;i<50;i++){ctx.fillStyle=`rgba(255,255,255,${.06+Math.random()*.4})`;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*W,.3+Math.random()*.8,0,Math.PI*2);ctx.fill();} }
+  if (style.id==='vhs') { for(let y=0;y<W;y+=3){ctx.fillStyle='rgba(0,0,0,.14)';ctx.fillRect(0,y+1,W,1);} }
+  // use square/diagonal for previews always (faster)
+  const cell=Math.floor(W/23),off=Math.ceil((W-cell*21)/2);
+  const [dr,dg,db]=htr(style.dot),[ar,ag,ab]=htr(style.acc||style.dot);
+  QR_PAT.forEach((row,ry)=>row.forEach((v,cx)=>{
+    if(!v)return;
+    const t=(cx+ry)/42;
+    ctx.fillStyle=`rgba(${dr*(1-t)+ar*t|0},${dg*(1-t)+ag*t|0},${db*(1-t)+ab*t|0},1)`;
+    ctx.fillRect(off+cx*cell+.5,off+ry*cell+.5,cell-1,cell-1);
+  }));
+  if (curBrand) {
+    const r = W * .1;
+    drawLogoOnCanvas(ctx, curBrand, W/2, W/2, r, { opacity:90, bgOpacity:0, blend:'normal' });
+  }
+}
+
+// ─────────────────────────────────────────────
+// Brand pills
+// ─────────────────────────────────────────────
+function renderBrands() {
+  const row = document.getElementById('brands-row');
+  row.innerHTML = '';
+  Object.entries(BRANDS).forEach(([name]) => {
+    const btn = document.createElement('button');
+    btn.className = 'brand-btn' + (curBrand===name?' active':'');
+    const ic = document.createElement('canvas');
+    ic.width=26; ic.height=26;
+    ic.style.cssText='flex-shrink:0;display:block;border-radius:50%';
+    // pill icon: always show solid brand color
+    const d = BRAND_SVGS[name];
+    const ctx = ic.getContext('2d');
+    if (d.bg==='linear') {
+      const grd=ctx.createLinearGradient(0,26,26,0);
+      d.gradColors.forEach((c,i)=>grd.addColorStop(i/(d.gradColors.length-1),c));
+      ctx.fillStyle=grd;
+    } else { ctx.fillStyle=d.bg; }
+    ctx.beginPath(); ctx.arc(13,13,13,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=d.fg;
+    const scale=(13*1.3)/24;
+    ctx.save(); ctx.translate(13-12*scale,13-12*scale); ctx.scale(scale,scale);
+    ctx.fill(new Path2D(d.path)); ctx.restore();
+
+    btn.appendChild(ic);
+    btn.appendChild(document.createTextNode(name));
+    btn.onclick = () => {
+      curBrand = (curBrand===name)?null:name;
+      if (curBrand) document.getElementById('url-input').value = BRANDS[name].url;
+      const custSection = document.getElementById('logo-cust-section');
+      custSection.style.display = (curBrand || logoSrc!=='brand') ? 'block' : 'none';
+      renderBrands(); renderStyleGrid();
+    };
+    row.appendChild(btn);
+  });
+}
+
+// ─────────────────────────────────────────────
+// Style grid
+// ─────────────────────────────────────────────
+function renderStyleGrid() {
+  const grid = document.getElementById('style-grid');
+  grid.innerHTML = '';
+  const items = curCat==='All'?STYLES:STYLES.filter(s=>s.cat===curCat);
+  document.getElementById('style-count').textContent = items.length+' styles';
+  items.forEach(s => {
+    const d = document.createElement('div');
+    d.className = 'style-card'+(s===curStyle?' active':'');
+    const c = document.createElement('canvas'); c.width=140; c.height=140;
+    drawStylePreview(c, s);
+    const nm = document.createElement('div'); nm.className='style-name'; nm.textContent=s.name;
+    const ck = document.createElement('div'); ck.className='style-check';
+    ck.innerHTML='<div class="check-circle"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></div>';
+    d.append(c, nm, ck);
+    d.onclick = () => {
+      curStyle=s; customColors=null;
+      syncCustomizePanelToStyle(s);
+      renderStyleGrid();
+    };
+    grid.appendChild(d);
+  });
+}
+
+function renderCats() {
+  const row = document.getElementById('cats-row');
+  ['All','Nature','Tech','Space','Food','Style'].forEach(c => {
+    const b = document.createElement('button');
+    b.className='cat-btn'+(c===curCat?' active':'');
+    b.textContent=c;
+    b.onclick=()=>{curCat=c;document.querySelectorAll('.cat-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderStyleGrid();};
+    row.appendChild(b);
+  });
+}
+
+// ─────────────────────────────────────────────
+// Customize panel
+// ─────────────────────────────────────────────
+function toggleCustomize() {
+  const panel = document.getElementById('cust-panel');
+  const arrow = document.getElementById('cust-arrow');
+  const open = panel.style.display==='none'||panel.style.display==='';
+  panel.style.display = open?'block':'none';
+  arrow.style.transform = open?'rotate(180deg)':'rotate(0deg)';
+}
+
+function syncCustomizePanelToStyle(s) {
+  document.getElementById('c-bg').value     = s.bg;
+  document.getElementById('c-bg-hex').value = s.bg;
+  document.getElementById('c-dot').value    = s.dot;
+  document.getElementById('c-dot-hex').value= s.dot;
+  document.getElementById('c-acc').value    = s.acc||s.dot;
+  document.getElementById('c-acc-hex').value= s.acc||s.dot;
+}
+
+function syncColorFromPicker(pickerId, hexId) {
+  const v = document.getElementById(pickerId).value;
+  document.getElementById(hexId).value = v;
+  applyCustomColors();
+}
+
+function syncColorFromHex(hexId, pickerId) {
+  const v = document.getElementById(hexId).value.trim();
+  if (/^#[0-9a-fA-F]{6}$/.test(v)) {
+    document.getElementById(pickerId).value = v;
+    applyCustomColors();
+  }
+}
+
+function applyCustomColors() {
+  customColors = {
+    bg:  val('c-bg'),
+    dot: val('c-dot'),
+    acc: val('c-acc'),
+  };
+}
+
+function setGradDir(dir, el) {
+  gradDir = dir;
+  document.querySelectorAll('.grad-dir').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function setModShape(shape, el) {
+  modShape = shape;
+  document.querySelectorAll('.mod-shape').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function setBlend(blend, el) {
+  logoBlend = blend;
+  document.querySelectorAll('.blend-btn').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function setLogoPos(pos, el) {
+  logoPos = pos;
+  document.querySelectorAll('.pos-btn').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+}
+
+function updateLogoLabel() {
+  const sz = +document.getElementById('logo-size').value;
+  const op = +document.getElementById('logo-opacity').value;
+  const bg = +document.getElementById('logo-bg-opacity').value;
+  const labels = {4:'Tiny',6:'Small',9:'Medium',12:'Large',16:'XL'};
+  document.getElementById('logo-size-val').textContent = labels[sz]||(sz<7?'Small':sz<11?'Medium':'Large');
+  document.getElementById('logo-opacity-val').textContent = op+'%';
+  document.getElementById('logo-bg-val').textContent = bg===0?'Transparent':bg<50?'Subtle':bg<100?'Visible':'Solid';
+}
+
+function getLogoPosXY(W, r) {
+  const pad = r * 1.5;
+  const positions = {
+    tl:     [pad, pad],
+    tc:     [W/2, pad],
+    tr:     [W-pad, pad],
+    cl:     [pad, W/2],
+    center: [W/2, W/2],
+    cr:     [W-pad, W/2],
+    bl:     [pad, W-pad],
+    bc:     [W/2, W-pad],
+    br:     [W-pad, W-pad],
+  };
+  return positions[logoPos] || [W/2, W/2];
+}
+
+// ─────────────────────────────────────────────
+// Background
+// ─────────────────────────────────────────────
+function setBgMode(mode, el) {
+  bgMode=mode;
+  document.querySelectorAll('.bg-tab').forEach(x=>x.classList.remove('active'));
+  el.classList.add('active');
+  ['none','ai','scene','upload'].forEach(id=>{
+    document.getElementById('bg-'+id).style.display=(id===mode)?'block':'none';
+  });
+  if (mode!=='upload') bgImage=null;
+  if (mode==='scene') renderScenePreviews();
+}
+
+function renderSceneGrid() {
+  const row = document.getElementById('scene-grid');
+  row.innerHTML='';
+  Object.keys(SCENES).forEach(name=>{
+    const b=document.createElement('button');
+    b.className='scene-btn'+(name===curScene?' active':'');
+    b.textContent=name;
+    b.onclick=()=>{curScene=name;document.querySelectorAll('.scene-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderScenePreviews();};
+    row.appendChild(b);
+  });
+  renderScenePreviews();
+}
+
+function renderScenePreviews() {
+  const wrap=document.getElementById('scene-previews');
+  wrap.innerHTML='';
+  const fn=SCENES[curScene]; if(!fn) return;
+  [STYLES[0],STYLES[3],STYLES[6]].forEach(s=>{
+    const c=document.createElement('canvas');
+    c.width=160;c.height=80;
+    c.style.cssText='flex:1;height:58px;border-radius:7px;border:1px solid #2a2a2a';
+    fn(c,160);
+    drawQRModules(c.getContext('2d'),160,s,.78,'square','diagonal');
+    wrap.appendChild(c);
+  });
+}
+
+function onFileUpload(inp) {
+  const f=inp.files[0]; if(!f) return;
+  const r=new FileReader();
+  r.onload=e=>{const img=new Image();img.onload=()=>{bgImage=img;document.getElementById('upload-label').textContent='✓ '+f.name+' loaded';};img.src=e.target.result;};
+  r.readAsDataURL(f);
+}
+
+async function previewAiBg() {
+  const prompt=document.getElementById('ai-prompt').value.trim(); if(!prompt) return;
+  const loadEl=document.getElementById('ai-loading');
+  const prevEl=document.getElementById('ai-preview');
+  loadEl.style.display='block';
+  loadEl.innerHTML='Generating AI image... <span style="color:var(--text3)">(20-40s)</span>';
+  prevEl.style.display='none'; aiImageEl=null;
+  const seed=Math.random()*9999|0;
+  const url=`/api/proxy?prompt=${encodeURIComponent(prompt+', vivid photorealistic, high quality')}&seed=${seed}`;
+  const img=new Image();
+  const timer=setTimeout(()=>{
+    loadEl.innerHTML='Taking too long. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button>';
+  },45000);
+  img.onload=()=>{
+    clearTimeout(timer);
+    aiImageEl=img;
+    document.getElementById('ai-preview-img').src=url;
+    prevEl.style.display='block';
+    loadEl.style.display='none';
+  };
+  img.onerror=()=>{
+    clearTimeout(timer);
+    loadEl.innerHTML='Could not generate. <button onclick="previewAiBg()" style="color:var(--accent2);background:none;border:none;cursor:pointer;font-family:inherit;font-size:12px;text-decoration:underline;">Try again ↺</button>';
+  };
+  img.src=url;
+}
+
+// ─────────────────────────────────────────────
+// Real QR pixel data
+// ─────────────────────────────────────────────
+async function getRealQRPixels(url, W) {
+  return new Promise(resolve=>{
+    const div=document.createElement('div');
+    div.style.cssText=`position:fixed;left:-9999px;top:0;width:${W}px;height:${W}px;overflow:hidden`;
+    document.body.appendChild(div);
+    new QRCode(div,{text:url,width:W,height:W,colorDark:'#000000',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.H});
+    setTimeout(()=>{
+      let src=div.querySelector('canvas');
+      if(!src){const img=div.querySelector('img');if(img){src=document.createElement('canvas');src.width=W;src.height=W;src.getContext('2d').drawImage(img,0,0,W,W);}}
+      document.body.removeChild(div);
+      resolve(src?src.getContext('2d').getImageData(0,0,W,W).data:null);
+    },150);
+  });
+}
+
+// ─────────────────────────────────────────────
+// Generate
+// ─────────────────────────────────────────────
+async function generate() {
+  const url=document.getElementById('url-input').value.trim();
+  if(!url){const i=document.getElementById('url-input');i.style.borderColor='#ef4444';setTimeout(()=>i.style.borderColor='',1500);i.focus();return;}
+
+  const ov=document.getElementById('loading'),lt=document.getElementById('loading-text');
+  const msgs=['Encoding your URL...','Building QR structure...','Applying '+curStyle.name+'...','Compositing layers...','Almost done...'];
+  let mi=0; ov.classList.add('show'); const iv=setInterval(()=>lt.textContent=msgs[mi++%msgs.length],900);
+  document.getElementById('gen-btn').disabled=true;
+
+  try {
+    const W=500;
+    const qpix=await getRealQRPixels(url,W);
+    const canvas=document.getElementById('result-canvas');
+    canvas.width=W; canvas.height=W;
+    const ctx=canvas.getContext('2d');
+    const colors=getColors();
+    const qrAlpha=(+val('qr-opacity'))/100;
+
+    // ── 1. Background ──
+    let hasBg=false;
+    if (bgMode==='upload'&&bgImage)         { ctx.drawImage(bgImage,0,0,W,W); hasBg=true; }
+    else if (bgMode==='ai'&&aiImageEl)      { try{ctx.drawImage(aiImageEl,0,0,W,W);hasBg=true;}catch(e){console.warn('CORS blocked AI image, using style bg');ctx.fillStyle=colors.bg;ctx.fillRect(0,0,W,W);} }
+    else if (bgMode==='ai'&&!aiImageEl)     { ctx.fillStyle=colors.bg; ctx.fillRect(0,0,W,W); }
+    else if (bgMode==='scene'&&SCENES[curScene]) { SCENES[curScene](canvas,W); hasBg=true; }
+    else {
+      ctx.fillStyle=colors.bg; ctx.fillRect(0,0,W,W);
+      if(curStyle.cat==='Space'){for(let i=0;i<180;i++){ctx.fillStyle=`rgba(255,255,255,${.05+Math.random()*.6})`;ctx.beginPath();ctx.arc(Math.random()*W,Math.random()*W,.3+Math.random()*1.5,0,Math.PI*2);ctx.fill();}}
+      if(curStyle.id==='vhs'){for(let y=0;y<W;y+=4){ctx.fillStyle='rgba(0,0,0,.12)';ctx.fillRect(0,y+2,W,2);}}
+    }
+
+    // ── 2. Real QR overlay ──
+    if(qpix){
+      const [dr,dg,db]=htr(colors.dot),[ar,ag,ab]=htr(colors.acc||colors.dot);
+
+      // When a background image is present, stamp a soft white backing
+      // behind the light QR modules so scanners can always read it
+      if(hasBg){
+        const cell=Math.floor(W/23);
+        const off=Math.ceil((W-cell*21)/2);
+        const pad=Math.floor(cell*.15);
+        // White frosted backing over the entire QR zone
+        ctx.fillStyle='rgba(255,255,255,0.55)';
+        ctx.fillRect(off-cell,off-cell,(cell*21)+cell*2,(cell*21)+cell*2);
+      }
+
+      const ov2=document.createElement('canvas');ov2.width=W;ov2.height=W;
+      const ov2ctx=ov2.getContext('2d');
+      const od=ov2ctx.createImageData(W,W);
+      for(let i=0;i<qpix.length;i+=4){
+        const dark=(qpix[i]+qpix[i+1]+qpix[i+2])/3<128;
+        if(dark){
+          const t=((i/4)%W+Math.floor((i/4)/W))/(W*2);
+          let t2;
+          if      (gradDir==='horizontal') t2=((i/4)%W)/W;
+          else if (gradDir==='vertical')   t2=Math.floor((i/4)/W)/W;
+          else if (gradDir==='radial')     t2=Math.min(1,Math.sqrt((((i/4)%W)-W/2)**2+(Math.floor((i/4)/W)-W/2)**2)/(W*.5));
+          else if (gradDir==='solid')      t2=0;
+          else                             t2=t;
+          od.data[i]  =dr*(1-t2)+ar*t2|0;
+          od.data[i+1]=dg*(1-t2)+ag*t2|0;
+          od.data[i+2]=db*(1-t2)+ab*t2|0;
+          od.data[i+3]=255; // always fully opaque dark modules — critical for scanning
+        }
+        // light modules: leave transparent — the frosted backing shows through
+      }
+
+      if(modShape!=='square'){
+        drawQRModules(ctx,W,{dot:colors.dot,acc:colors.acc},1,modShape,gradDir);
+      } else {
+        ov2ctx.putImageData(od,0,0);
+        ctx.drawImage(ov2,0,0);
+      }
+    }
+
+    // ── 3. Logo — drawn LAST so it's always on top ──
+    const hasLogo = (logoSrc==='brand'&&curBrand) || (logoSrc==='custom'&&customLogoImg) || (logoSrc==='text'&&document.getElementById('logo-text-input')?.value.trim());
+    if(hasLogo){
+      const sizeRatio = (+val('logo-size'))/100;
+      const r = W * sizeRatio;
+      const opacity   = +val('logo-opacity');
+      const bgOpacity = +val('logo-bg-opacity');
+      const [lx,ly]   = getLogoPosXY(W, r);
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalAlpha = 1;
+      drawLogoOnCanvas(ctx,curBrand,lx,ly,r,{opacity,bgOpacity,blend:logoBlend});
+    }
+
+    // ── 4. Show result ──
+    document.getElementById('result-placeholder').style.display='none';
+    document.getElementById('result-canvas-wrap').style.display='block';
+    document.getElementById('result-actions').style.display='flex';
+    document.getElementById('result-title').textContent=curStyle.name+(curBrand?' · '+curBrand:'')+(hasBg&&bgMode!=='none'?' · Custom BG':'');
+    document.getElementById('result-sub').textContent='Scannable QR code · Ready to download';
+    const note=document.getElementById('result-note');
+    if(bgMode==='ai'&&aiImageEl){note.style.display='block';note.innerHTML='<strong>AI background</strong> by Pollinations.ai — free, unlimited, no API key.';}
+    else if(bgMode==='scene'){note.style.display='block';note.innerHTML='<strong>'+curScene+'</strong> scene generated in-browser.';}
+    else if(bgMode==='upload'&&bgImage){note.style.display='block';note.innerHTML='Your photo composited behind QR modules.';}
+    else note.style.display='none';
+
+  } catch(e){console.error(e);alert('Something went wrong. Try again.');}
+  finally{clearInterval(iv);ov.classList.remove('show');document.getElementById('gen-btn').disabled=false;}
+}
+
+// ─────────────────────────────────────────────
+// Download
+// ─────────────────────────────────────────────
+function downloadQR() {
+  const src=document.getElementById('result-canvas');
+  const out=document.createElement('canvas');out.width=560;out.height=560;
+  const ctx=out.getContext('2d');
+  const colors=getColors();
+  ctx.fillStyle=colors.bg; ctx.fillRect(0,0,560,560);
+  ctx.drawImage(src,30,30,500,500);
+  const a=document.createElement('a');
+  a.download='qro-'+curStyle.id+(curBrand?'-'+curBrand.toLowerCase():'')+'.png';
+  a.href=out.toDataURL('image/png');
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+}
+
+function shareQR() {
+  const url=document.getElementById('url-input').value.trim(); if(!url) return;
+  if(navigator.share){navigator.share({title:'My Qro QR Code',url});}
+  else{navigator.clipboard.writeText(url).then(()=>{document.getElementById('share-btn').textContent='✓ Copied';setTimeout(()=>document.getElementById('share-btn').textContent='Share link',2000);});}
+}
+
+function showPrivacy(){document.getElementById('privacy-modal').classList.add('show');}
+function closePrivacy(){document.getElementById('privacy-modal').classList.remove('show');}
+
+// ─────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────
+renderBrands();
+renderCats();
+renderStyleGrid();
+renderSceneGrid();
+syncCustomizePanelToStyle(curStyle);
+document.getElementById('logo-cust-section').style.display = 'block';
+</script>
+
+<!-- Privacy Policy Modal -->
+<div class="modal-bg" id="privacy-modal" onclick="if(event.target===this)closePrivacy()">
+  <div class="modal">
+    <h2>Privacy Policy</h2>
+    <p style="color:var(--text3);font-size:12px;margin-bottom:16px;">Last updated: March 2026</p>
+    <h3>1. Who we are</h3>
+    <p>Qro is a free, open-source AI QR code generator. This policy explains how data is handled when you use Qro.</p>
+    <h3>2. What data we collect</h3>
+    <p><strong style="color:var(--text)">None.</strong> Qro does not collect, store, or transmit any personal information. URLs you enter are processed entirely in your browser and never sent anywhere. We have no servers, no database, and no accounts.</p>
+    <h3>3. Third-party services</h3>
+    <p><strong style="color:var(--text)">Pollinations.ai</strong> — If you use the optional AI background feature, your text prompt (e.g. "pizza") is sent to Pollinations.ai to generate an image. Your URL is never sent — only the image description. Review their policy at <a href="https://pollinations.ai" target="_blank" style="color:var(--accent2)">pollinations.ai</a>.</p>
+    <p><strong style="color:var(--text)">GitHub Pages</strong> — This site is hosted on GitHub Pages. GitHub may log visitor IP addresses as part of standard hosting. See <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" style="color:var(--accent2)">GitHub's Privacy Statement</a>.</p>
+    <p><strong style="color:var(--text)">qrcode.js</strong> — Runs 100% in your browser. Makes zero network requests.</p>
+    <h3>4. Cookies &amp; tracking</h3>
+    <p>No cookies, no analytics, no tracking pixels, no fingerprinting of any kind.</p>
+    <h3>5. EU / UK — GDPR</h3>
+    <p>You have rights to access, rectify, erase, and port your data. Because Qro collects no personal data, there is nothing to access or delete. Legal basis for processing: we process no personal data. For AI background prompts sent to Pollinations.ai, the legal basis is your consent (you voluntarily typed and submitted the prompt).</p>
+    <h3>6. California — CCPA / CPRA</h3>
+    <p>We do not sell or share personal information. We collect no personal information from California residents or any other users.</p>
+    <h3>7. Canada — PIPEDA</h3>
+    <p>Qro holds no personal information about any user. There is nothing to access or correct.</p>
+    <h3>8. Children's privacy</h3>
+    <p>Qro does not knowingly collect information from children under 13 (or under 16 in the EU). We collect no data from any user regardless of age.</p>
+    <h3>9. International data transfers</h3>
+    <p>When you use the AI background feature, your text prompt is transferred to Pollinations.ai whose servers may be outside your country. By using that feature you consent to this transfer.</p>
+    <h3>10. Security</h3>
+    <p>Since Qro has no backend and collects no user data, there is no user data at risk. All QR generation happens locally in your browser.</p>
+    <h3>11. Brand names</h3>
+    <p>Spotify, Instagram, WhatsApp, YouTube, TikTok, and LinkedIn are trademarks of their respective owners. Qro is not affiliated with any of these companies. Brand names are used descriptively under nominative fair use. Icons are from Simple Icons (CC0 license), embedded directly in the source code.</p>
+    <h3>12. Changes</h3>
+    <p>Updates will be reflected with a new "last updated" date above. Continued use after changes = acceptance.</p>
+    <h3>13. Contact</h3>
+    <p>Open an issue on the <a href="https://github.com" target="_blank" style="color:var(--accent2)">Qro GitHub repository</a> for any privacy questions.</p>
+    <button class="modal-close" onclick="closePrivacy()">Close</button>
+  </div>
+</div>
+
+</body>
+</html>
